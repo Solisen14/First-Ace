@@ -185,6 +185,41 @@
     .ace-fill { height:100%; background:var(--teal); width:0; transition:width .2s; }
     @media (max-width:740px) { .extra-grid {grid-template-columns:1fr;} .results-controls .button {flex:1;} }
     @media (max-width:740px) { .reflection {padding:17px;} .reflection-choice {flex:1;} }
+
+    /* Data-driven scrollytelling after the 1,000-shuffle stage */
+    .data-story { padding-top:37px; border-top:1px solid var(--edge); margin-top:43px; }
+    .data-story > .story-heading { max-width:800px; margin-bottom:24px; }
+    .story-heading h2 { margin-bottom:10px; }
+    .story-heading p { font-size:17px; color:var(--muted); margin:0; }
+    .story-layout { display:grid; grid-template-columns:minmax(220px, .75fr) minmax(0, 1.25fr); gap:28px; align-items:start; }
+    .story-pin { position:sticky; top:22px; background:#e8f2ef; border:1px solid #c8e2da; border-radius:14px; padding:24px; }
+    .story-pin .story-kicker { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.09em; color:var(--teal); margin:0 0 12px; }
+    .story-pin .story-stat { font:700 clamp(28px, 3.4vw, 40px)/1.17 var(--serif); letter-spacing:-.03em; margin:0 0 12px; overflow-wrap:break-word; }
+    .story-pin .story-context { color:#42625b; font-size:15px; margin:0; }
+    .story-dots { display:flex; align-items:center; gap:8px; margin-top:24px; }
+    .story-dot { width:10px; height:10px; background:#b0c7c0; border-radius:50%; }
+    .story-dot.active { background:var(--teal); width:23px; border-radius:6px; }
+    .story-step { border:1px solid var(--edge); border-left:4px solid #d2dbd6; border-radius:13px; padding:26px 24px; background:#fff; margin-bottom:20px; min-height:310px; scroll-margin-top:22px; transition:border-color .25s, box-shadow .25s; }
+    .story-step.active { border-left-color:var(--teal); box-shadow:0 10px 28px #1b45350e; }
+    .story-step .step-kicker { color:var(--teal); font-size:13px; text-transform:uppercase; letter-spacing:.08em; font-weight:800; margin:0 0 14px; }
+    .story-step h3 { font:700 clamp(23px,2.7vw,29px)/1.3 var(--serif); margin:0 0 15px; }
+    .story-step p { font-size:16px; color:#475762; margin:0 0 16px; }
+    .story-step .story-question { color:var(--ink); font-weight:750; font-size:18px; }
+    .story-choices { display:flex; flex-wrap:wrap; gap:9px; }
+    .story-choices .button { text-align:left; }
+    .story-choices .button.chosen { border-color:var(--teal); background:#e5f3ed; color:var(--ink); }
+    .story-feedback { margin-top:17px; border-radius:10px; border:1px solid #c8e2da; background:#eff8f4; padding:15px; color:#2d4e46; font-size:15px; }
+    .story-feedback strong { display:block; margin-bottom:5px; }
+    .story-last { min-height:260px; background:#f5f9f7; border-color:#c7ded6; }
+    .story-last .button { font-size:17px; padding:14px 18px; }
+    @media (max-width:740px) {
+      .story-layout { grid-template-columns:1fr; gap:14px; }
+      .story-pin { position:static; padding:16px 18px; }
+      .story-pin .story-stat { font-size:27px; }
+      .story-dots { margin-top:12px; }
+      .story-step { padding:20px 17px; min-height:0; margin-bottom:14px; }
+      .story-choices .button { flex:1; }
+    }
     [hidden] { display:none !important; }
     @media (max-width:740px) {
       .poll-card { grid-template-columns:1fr; gap:20px; }
@@ -324,7 +359,6 @@
     <div class="results-controls" aria-label="Run more simulated decks">
       <button id="hundred" class="button" type="button">Run 100 Shuffles</button>
       <button id="thousand" class="button secondary" type="button" hidden>Run 1,000 Shuffles</button>
-      <button id="hundredThousand" class="button secondary" type="button" hidden>Run 100,000 Shuffles</button>
       <button id="theory-next" class="button secondary" type="button" hidden>See the Mathematical Explanation</button>
     </div>
     <div id="bulk-progress" class="bulk-progress" hidden>
@@ -376,6 +410,65 @@
       <div class="twist" id="theory-comparison" hidden>
         <div class="twist-box"><h4>What if the 2♣ appeared earlier?</h4><div class="fraction">1 in 5 <span style="font:500 14px var(--sans);color:var(--muted)">= 20%</span></div><p>The Two of Clubs comes before all four aces in 20% of shuffles.</p><div class="empirical" id="club-before">Observed: no shuffles yet</div></div>
         <div class="twist-box"><h4>What if the A♠ is the first ace?</h4><div class="fraction">1 in 4 <span style="font:500 14px var(--sans);color:var(--muted)">= 25%</span></div><p>The Ace of Spades itself is the first ace in 25% of shuffles.</p><div class="empirical" id="spade-first">Observed: no shuffles yet</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap section data-story" id="story-section" aria-labelledby="story-title" hidden>
+    <div class="story-heading">
+      <div class="section-head"><span class="section-num">03 / THINK ABOUT THE DATA</span><h2 id="story-title" tabindex="-1">What are the results telling us?</h2></div>
+      <p>You have completed over a thousand shuffles. Scroll through a few observations from <strong>your own experiment</strong> before testing a much larger sample.</p>
+    </div>
+    <div class="story-layout">
+      <aside class="story-pin" aria-label="Current data highlight">
+        <p id="story-rail-kicker" class="story-kicker">First ace</p>
+        <p id="story-rail-stat" class="story-stat">Waiting for results</p>
+        <p id="story-rail-context" class="story-context">Scroll to explore the evidence.</p>
+        <div class="story-dots" aria-hidden="true">
+          <span class="story-dot active"></span><span class="story-dot"></span><span class="story-dot"></span><span class="story-dot"></span>
+        </div>
+      </aside>
+      <div class="story-steps">
+        <article class="story-step active" id="story-step-ace" data-story-step="0">
+          <p class="step-kicker">01 / Which ace?</p>
+          <h3 id="story-ace-heading">Which ace led the way?</h3>
+          <p id="story-ace-observation">Your results will appear here.</p>
+          <p id="story-ace-question" class="story-question">Does the ace with the highest count have an advantage?</p>
+          <div class="story-choices" role="group" aria-label="Respond to the first ace question">
+            <button class="button secondary" type="button" data-story-answer="ace:advantage">That ace has an advantage</button>
+            <button class="button secondary" type="button" data-story-answer="ace:variation">This could be chance</button>
+          </div>
+          <div class="story-feedback" id="story-ace-feedback" role="status" hidden></div>
+        </article>
+        <article class="story-step" id="story-step-average" data-story-step="1">
+          <p class="step-kicker">02 / Waiting for an ace</p>
+          <h3>What does an average tell us?</h3>
+          <p id="story-average-observation">Your results will appear here.</p>
+          <p id="story-average-question" class="story-question">Does this average tell us exactly when the first ace will appear in the next shuffled deck?</p>
+          <div class="story-choices" role="group" aria-label="Respond to the average question">
+            <button class="button secondary" type="button" data-story-answer="average:exact">Yes, it predicts the next shuffle</button>
+            <button class="button secondary" type="button" data-story-answer="average:summary">No, it describes many shuffles</button>
+          </div>
+          <div class="story-feedback" id="story-average-feedback" role="status" hidden></div>
+        </article>
+        <article class="story-step" id="story-step-club" data-story-step="2">
+          <p class="step-kicker">03 / The Two of Clubs</p>
+          <h3>What if the 2♣ appears early?</h3>
+          <p id="story-club-observation">Your results will appear here.</p>
+          <p class="story-question">Does the number of times the 2♣ appears before every ace settle which card is more likely to appear <em>immediately after</em> the first ace?</p>
+          <div class="story-choices" role="group" aria-label="Respond to the Two of Clubs question">
+            <button class="button secondary" type="button" data-story-answer="club:yes">Yes, it settles the question</button>
+            <button class="button secondary" type="button" data-story-answer="club:no">Not necessarily</button>
+          </div>
+          <div class="story-feedback" id="story-club-feedback" role="status" hidden></div>
+        </article>
+        <article class="story-step story-last" id="story-step-next" data-story-step="3">
+          <p class="step-kicker">04 / Test your conjecture</p>
+          <h3>What might happen with 100,000 more shuffles?</h3>
+          <p>Look back at the differences in your results. Which ones do you expect to become smaller? Could any become larger? Make a prediction before you continue.</p>
+          <button id="hundredThousand" class="button" type="button" hidden>Run 100,000 Shuffles</button>
+          <p id="story-next-note">This runs real randomized decks without animating individual cards. The theoretical comparisons are revealed afterward.</p>
+        </article>
       </div>
     </div>
   </section>
@@ -624,10 +717,12 @@
   const state = {
     total: 0, spade: 0, club: 0, other: 0, clubBefore: 0, spadeFirst: 0,
     firstAceBySuit: {'♠':0, '♥':0, '♦':0, '♣':0},
-    sumBeforeFirst: 0, longestAceFree: 0,
+    sumBeforeFirst: 0, minBeforeFirst: Infinity, maxBeforeFirst: 0, longestAceFree: 0,
     last: null, busy: false
   };
   const journey = {reflected: false, tenComplete: false, hundredComplete: false, thousandComplete: false, largeComplete: false};
+  let storySnapshot = null;
+  let storyActiveStep = 0;
   let reflectionAnswer = null;
   const controls = [el('one'), el('ten'), el('hundred'), el('thousand'), el('hundredThousand'), el('reset')];
 
@@ -668,6 +763,8 @@
     if (e.spadeFirst) state.spadeFirst++;
     state.firstAceBySuit[e.firstSuit]++;
     state.sumBeforeFirst += e.first;
+    state.minBeforeFirst = Math.min(state.minBeforeFirst, e.first);
+    state.maxBeforeFirst = Math.max(state.maxBeforeFirst, e.first);
     state.longestAceFree = Math.max(state.longestAceFree, e.longestAceFree);
     state.last = e;
   }
@@ -749,6 +846,137 @@
     el('outcome-note').textContent = !state.total
       ? 'Run a few shuffles to start collecting evidence.'
       : `The next card was neither target in ${nfmt.format(state.other)} of ${nfmt.format(state.total)} shuffles. Bars show a 0–${scale}% scale and are capped at ${scale}%.`;
+  }
+
+  // Scrollytelling is a snapshot of the 1,000-shuffle milestone, so the
+  // questions do not change if visitors later run additional batches.
+  function storyFromResults(snapshot) {
+    const suits = [
+      {symbol:'♠',label:'Ace of Spades'},
+      {symbol:'♥',label:'Ace of Hearts'},
+      {symbol:'♦',label:'Ace of Diamonds'},
+      {symbol:'♣',label:'Ace of Clubs'}
+    ];
+    const leader = suits.slice().sort((a,b) =>
+      snapshot.firstAceBySuit[b.symbol] - snapshot.firstAceBySuit[a.symbol])[0];
+    const topCount = snapshot.firstAceBySuit[leader.symbol];
+    const topPercent = 100 * topCount / snapshot.total;
+    const skewed = topPercent > 30;
+    const mean = snapshot.sumBeforeFirst / snapshot.total;
+    const clubPercent = 100 * snapshot.clubBefore / snapshot.total;
+    return {
+      leader: leader.label,
+      topCount,
+      topPercent,
+      skewed,
+      mean,
+      clubPercent,
+      clubCount: snapshot.clubBefore,
+      minBefore: snapshot.minBeforeFirst,
+      maxBefore: snapshot.maxBeforeFirst,
+      total: snapshot.total,
+      rail: [
+        {kicker:'Which ace came first?',stat:leader.label + ': ' + topPercent.toFixed(1) + '%',
+          context:nfmt.format(topCount) + ' of ' + nfmt.format(snapshot.total) + ' decks'},
+        {kicker:'Average cards before the first ace',stat:mean.toFixed(2) + ' cards',
+          context:'Observed range: ' + snapshot.minBeforeFirst + ' to ' + snapshot.maxBeforeFirst + ' non-ace cards'},
+        {kicker:'Two of Clubs before all aces',stat:clubPercent.toFixed(1) + '%',
+          context:nfmt.format(snapshot.clubBefore) + ' of ' + nfmt.format(snapshot.total) + ' shuffles'},
+        {kicker:'Ready for the next sample?',stat:nfmt.format(snapshot.total) + ' shuffles',
+          context:'What do you predict another 100,000 will reveal?'}
+      ]
+    };
+  }
+  function activateStoryStep(index) {
+    if (!storySnapshot || index < 0 || index > 3) return;
+    storyActiveStep = index;
+    const current = storySnapshot.rail[index];
+    el('story-rail-kicker').textContent = current.kicker;
+    el('story-rail-stat').textContent = current.stat;
+    el('story-rail-context').textContent = current.context;
+    document.querySelectorAll('[data-story-step]').forEach((panel,i) => {
+      panel.classList.toggle('active',i===index);
+    });
+    document.querySelectorAll('.story-dot').forEach((dot,i) => {
+      dot.classList.toggle('active',i===index);
+    });
+  }
+  function buildStory() {
+    storySnapshot = storyFromResults({
+      total:state.total,
+      firstAceBySuit:{...state.firstAceBySuit},
+      clubBefore:state.clubBefore,
+      sumBeforeFirst:state.sumBeforeFirst,
+      minBeforeFirst:state.minBeforeFirst,
+      maxBeforeFirst:state.maxBeforeFirst
+    });
+    const snap = storySnapshot;
+    el('story-ace-heading').textContent = snap.skewed
+      ? 'Is the ' + snap.leader + ' just lucky?'
+      : 'One ace is ahead. Does that mean anything?';
+    el('story-ace-observation').textContent =
+      'In your ' + nfmt.format(snap.total) + ' shuffles, the ' + snap.leader +
+      ' came first ' + nfmt.format(snap.topCount) + ' times (' +
+      snap.topPercent.toFixed(1) + '%).' +
+      (snap.skewed ? ' That is above 30% of your trials.' :
+        ' The ace counts are not exactly the same.');
+    el('story-ace-question').textContent = snap.skewed
+      ? 'Did this ace become “lucky”, or could an unusually high count still happen by chance?'
+      : 'Does leading this sample prove that the ' + snap.leader + ' has an advantage?';
+    el('story-average-observation').textContent =
+      'The average number of non-ace cards before the first ace was ' +
+      snap.mean.toFixed(2) + '. But across individual shuffles, you saw as few as ' +
+      snap.minBefore + ' and as many as ' + snap.maxBefore + ' before the first ace.';
+    el('story-club-observation').textContent =
+      'The Two of Clubs appeared before every ace in ' +
+      nfmt.format(snap.clubCount) + ' of ' + nfmt.format(snap.total) +
+      ' shuffles (' + snap.clubPercent.toFixed(1) + '%).';
+    for (const key of ['ace','average','club']) {
+      const feedback = el('story-' + key + '-feedback');
+      feedback.hidden = true;
+      feedback.replaceChildren();
+    }
+    document.querySelectorAll('[data-story-answer]').forEach(button => {
+      button.disabled = false;
+      button.classList.remove('chosen');
+    });
+    el('story-section').hidden = false;
+    activateStoryStep(0);
+  }
+  function respondToStory(button) {
+    if (!storySnapshot || !journey.thousandComplete) return;
+    const [topic,answer] = String(button.dataset.storyAnswer || '').split(':');
+    if (!['ace','average','club'].includes(topic)) return;
+    const choices = Array.from(document.querySelectorAll('[data-story-answer]'))
+      .filter(b => b.dataset.storyAnswer.startsWith(topic + ':'));
+    choices.forEach(b => {b.disabled = true; b.classList.toggle('chosen',b===button);});
+    const correct = topic==='ace' ? answer==='variation'
+      : topic==='average' ? answer==='summary' : answer==='no';
+    const explanations = {
+      ace:'One ace leading this sample does not establish that it has a built-in advantage. Randomly shuffled decks can produce uneven counts. A much larger sample will help us see whether the lead persists.',
+      average:'The average summarizes many different shuffles. The number of cards before the first ace can vary widely from one deck to the next. An average does not predict the next trial exactly.',
+      club:'The Two of Clubs appearing before every ace and appearing immediately after the first ace are different events. An early appearance rules out one outcome in that deck, but does not settle the overall comparison.'
+    };
+    const feedback = el('story-' + topic + '-feedback');
+    const heading = document.createElement('strong');
+    heading.textContent = correct ? 'That is a reasonable interpretation.' : 'Consider what the data can and cannot tell us.';
+    const body = document.createElement('span');
+    body.textContent = explanations[topic];
+    feedback.replaceChildren(heading,body);
+    feedback.hidden = false;
+  }
+  function initStoryScroll() {
+    if (!('IntersectionObserver' in window)) return;
+    const observer = new window.IntersectionObserver(entries => {
+      if (el('story-section').hidden) return;
+      const visible = entries.filter(e => e.isIntersecting)
+        .sort((a,b) => b.intersectionRatio - a.intersectionRatio);
+      if (visible.length) {
+        const index = Number(visible[0].target.dataset.storyStep);
+        activateStoryStep(index);
+      }
+    },{rootMargin:'-15% 0px -35% 0px',threshold:[0,.2,.5,.8]});
+    document.querySelectorAll('[data-story-step]').forEach(step=>observer.observe(step));
   }
   function revealTheory(visible) {
     for (const id of ['theory-axis', 'first-ace-theory', 'club-theory', 'mean-theory',
@@ -927,12 +1155,20 @@
       if (count === 100) {
         journey.hundredComplete = true;
         el('thousand').hidden = false;
-      } else if (count === 1000) {
+      } else if (count === 1000 && !journey.thousandComplete) {
         journey.thousandComplete = true;
+        buildStory();
+        // Move the next step to the bottom of the story, not above the data.
         el('hundredThousand').hidden = false;
+        el('hundred').hidden = true;
+        el('thousand').hidden = true;
+        el('evidence-intro').textContent = 'You have more than 1,000 trials. Examine the statistics below, then scroll through the questions that follow.';
+        el('bulk-status').textContent = '1,000 additional decks counted. Scroll down through the data to examine what you found.';
       }
       if (count === 100000) {
         journey.largeComplete = true;
+        el('hundredThousand').hidden = true;
+        el('story-next-note').textContent = 'Your 100,000 additional shuffles are complete. Now compare with the mathematical explanation.';
         revealTheory(true);
         el('bulk-status').textContent = nfmt.format(state.total) +
           ' shuffled decks recorded. The theoretical comparisons are now unlocked below.';
@@ -948,12 +1184,16 @@
     state.last = null;
     for (const suit of ['♠','♥','♦','♣']) state.firstAceBySuit[suit] = 0;
     state.sumBeforeFirst = 0;
+    state.minBeforeFirst = Infinity;
+    state.maxBeforeFirst = 0;
     state.longestAceFree = 0;
     journey.reflected = false;
     journey.tenComplete = false;
     journey.hundredComplete = false;
     journey.thousandComplete = false;
     journey.largeComplete = false;
+    storySnapshot = null;
+    storyActiveStep = 0;
     reflectionAnswer = null;
     el('reflection').hidden = true;
     el('reflection-run').hidden = true;
@@ -963,6 +1203,9 @@
     el('bulk-progress-bar').value = 0;
     el('evidence-intro').textContent = 'One shuffle tells us very little. Even 10 more is a small sample, especially for outcomes that happen rarely. What do you notice so far?';
     el('results-section').hidden = true;
+    el('story-section').hidden = true;
+    el('hundred').hidden = false;
+    el('story-next-note').textContent = 'This runs real randomized decks without animating individual cards. The theoretical comparisons are revealed afterward.';
     revealTheory(false);
     el('ten').hidden = true;
     el('thousand').hidden = true;
@@ -979,6 +1222,8 @@
   el('hundred').addEventListener('click', () => batch(100));
   el('thousand').addEventListener('click', () => batch(1000));
   el('hundredThousand').addEventListener('click', () => batch(100000));
+  document.querySelectorAll('[data-story-answer]').forEach(button =>
+    button.addEventListener('click', () => respondToStory(button)));
   el('theory-next').addEventListener('click', () => {
     if (!journey.largeComplete) return;
     el('proof-title').focus({preventScroll:true});
@@ -991,6 +1236,7 @@
   renderStage(null,0);
   renderResults();
   revealTheory(false);
+  initStoryScroll();
   initPoll();
   // Exposes a small test-only interface for verification in a local browser.
   window.__firstAceTest = { shuffleDeck, evaluate, state, batch, reset };
