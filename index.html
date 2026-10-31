@@ -179,6 +179,48 @@
     .live-results .bulk-progress { margin-bottom:19px; }
     .live-results .finish-actions {margin:24px 0 0; display:flex; gap:12px; flex-wrap:wrap;}
     .live-results .finish-actions .button {font-size:17px;}
+    /* Final reveal: intentionally prominent, with its content initially hidden */
+    .theory-callout { width:100%; border:2px solid #8bbdb2; border-radius:18px; background:#eaf5f1; padding:30px 26px; text-align:center; box-shadow:0 9px 28px rgba(25,70,55,.09); }
+    .theory-callout .callout-kicker { color:#176c60; font-size:13px; font-weight:800; letter-spacing:.1em; margin:0 0 8px; text-transform:uppercase; }
+    .theory-callout h3 { font:700 clamp(24px,3vw,32px)/1.2 var(--serif); margin:0 0 10px; }
+    .theory-callout p { font-size:16px; margin:0 auto 22px; max-width:570px; color:#39554d; }
+    .theory-callout .button { display:inline-flex; justify-content:center; align-items:center; gap:12px; min-height:63px; font-size:19px; padding:15px 26px; border-radius:12px; background:#133d39; border-color:#133d39; box-shadow:0 5px 0 #0f2d2a; }
+    .theory-callout .button:hover { background:#1b5b53; transform:translateY(-2px); }
+    .theory-callout .button:focus-visible { outline:3px solid var(--teal); outline-offset:5px; }
+    .theory-callout .arrow { font-size:23px; line-height:1; }
+    .explain-block { background:#fff; border:1px solid var(--edge); border-radius:15px; padding:clamp(21px,3vw,30px); margin:22px 0; }
+    .explain-block h3 { font:700 clamp(23px,3vw,29px)/1.22 var(--serif); margin:0 0 13px; }
+    .explain-block p { color:#435460; font-size:17px; line-height:1.62; margin:0 0 13px; }
+    .explain-block p:last-child { margin-bottom:0; }
+    .definition-line { background:#ecf5f1; border-left:4px solid var(--teal); padding:15px 18px; border-radius:0 9px 9px 0; }
+    .experiment-compare { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:22px 0; }
+    .experiment-compare .compare-card { border:1px solid #cfdcda; border-radius:13px; padding:18px; background:#f8faf8; }
+    .experiment-compare .compare-card h4 { font-size:16px; margin:0 0 8px; }
+    .experiment-compare .compare-card strong { display:block; color:var(--ink); font:700 clamp(29px,3vw,40px)/1.15 var(--serif); font-variant-numeric:tabular-nums; }
+    .experiment-compare .compare-card p { color:var(--muted); font-size:15px; margin:7px 0 0; }
+    .difference-line { background:#f5f3ed; padding:15px 18px; border-radius:9px; font-size:17px; font-weight:700; }
+    .proof-case { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:16px 0; }
+    .proof-case div { background:#f6f9f7; border:1px solid #dde8e3; border-radius:10px; padding:17px; }
+    .proof-case h4 { font-size:18px; margin:0 0 7px; }
+    .proof-case p { font-size:15px; margin:0; }
+    .gap-demo { background:#f2f8f5; border:1px solid #cce0d6; border-radius:14px; padding:19px; margin:19px 0; }
+    .gap-demo h4 { font-size:17px; margin:0 0 11px; }
+    .gap-cards { display:flex; gap:7px; justify-content:center; align-items:center; flex-wrap:wrap; margin:10px 0; }
+    .sample-card { display:grid; place-items:center; background:#fff; border:1px solid #a8bdba; border-radius:7px; min-width:53px; min-height:67px; padding:9px; font-size:20px; font-weight:800; }
+    .sample-card.ace { border:2px solid #b4863c; background:#fff4dc; }
+    .sample-gap { display:grid; place-items:center; min-width:75px; min-height:67px; border:2px dashed var(--teal); border-radius:9px; background:#e1f2ed; font-size:13px; font-weight:800; text-align:center; padding:5px; color:#11695e; }
+    .sample-ellipsis { font-weight:700; letter-spacing:.07em; color:#60716f; }
+    .gap-demo .caption { font-size:14px; margin:8px 0 0; text-align:center; color:#49615b; }
+    .proof-conclusion { background:var(--ink); color:white; border-radius:14px; padding:25px; text-align:center; }
+    .proof-conclusion .result { font:700 clamp(30px,4vw,44px)/1.15 var(--serif); margin:5px 0 12px; }
+    .proof-conclusion p { max-width:690px; color:#dce8e7; margin:0 auto; font-size:16px; }
+    @media (max-width:740px) {
+      .theory-callout {padding:23px 16px;}
+      .theory-callout .button {font-size:17px; width:100%; padding:14px 12px;}
+      .experiment-compare, .proof-case {grid-template-columns:1fr;}
+      .sample-card {min-width:40px; min-height:56px; font-size:17px; padding:6px;}
+      .sample-gap {min-width:62px; min-height:56px;}
+    }
 
     .extra-data { border-top:1px solid var(--edge); margin-top:25px; padding-top:24px; }
     .extra-data h3 { margin:0 0 7px; font:700 25px/1.25 var(--serif); }
@@ -369,7 +411,6 @@
     <div class="results-controls" aria-label="Run more simulated decks">
       <button id="hundred" class="button" type="button">Run 100 Shuffles</button>
       <button id="thousand" class="button secondary" type="button" hidden>Run 1,000 Shuffles</button>
-      <button id="theory-next" class="button secondary" type="button" hidden>See the Mathematical Explanation</button>
     </div>
     <div id="bulk-progress" class="bulk-progress" hidden>
       <label for="bulk-progress-bar"><span id="bulk-title">Running shuffles</span><strong id="bulk-count">0 / 100</strong></label>
@@ -495,17 +536,77 @@
       <p id="large-progress-status" role="status" aria-live="polite">Ready to begin.</p>
     </div>
     <div id="live-results-slot"></div>
-    <div class="finish-actions"><button id="large-theory-next" class="button" type="button" hidden>See the Mathematical Explanation</button></div>
+    <div class="finish-actions">
+      <div id="theory-callout" class="theory-callout" hidden>
+        <p class="callout-kicker">You collected the evidence</p>
+        <h3>Now, can we explain why?</h3>
+        <p>You've simulated more than 100,000 decks. The experimental results suggest an answer. Mathematical reasoning can tell us whether it must be true.</p>
+        <button id="large-theory-next" class="button" type="button" aria-controls="proof-section" aria-expanded="false">
+          See the Mathematical Explanation <span class="arrow" aria-hidden="true">↓</span>
+        </button>
+      </div>
+    </div>
   </section>
   <section class="wrap section proof" id="proof-section" aria-labelledby="proof-title" hidden>
-    <div class="section-head"><span class="section-num">03 / THE REVEAL</span><h2 id="proof-title" tabindex="-1">Why is it a tie?</h2></div>
-    <p class="proof-lead">The two cards are eliminated in different ways, but there's a surprisingly simple argument that works for <em>either</em> one.</p>
-    <div class="proof-steps">
-      <div class="proof-step"><div class="number">51</div><strong>Take out the target card.</strong><p>Remove the A♠ or the 2♣, then shuffle the other 51 cards. Find their first ace.</p></div>
-      <div class="proof-step"><div class="number">52</div><strong>Choose an insertion gap.</strong><p>There are 52 equally likely places to put the removed card back: before, between, or after the 51 cards.</p></div>
-      <div class="proof-step"><div class="number">1</div><strong>Only one gap wins.</strong><p>Exactly one gap puts that card immediately after the first ace, without changing which ace comes first.</p></div>
+    <div class="section-head"><span class="section-num">05 / THE MATHEMATICAL EXPLANATION</span><h2 id="proof-title" tabindex="-1">From experiment to explanation</h2></div>
+    <div class="explain-block">
+      <h3>What is theoretical probability?</h3>
+      <p class="definition-line"><strong>Theoretical probability</strong> is the likelihood of an event calculated using mathematical reasoning about what could happen, rather than by running an experiment and counting the results.</p>
+      <p>Experimental probability tells us what <em>did</em> happen in our shuffles. Theoretical probability helps us work out what we should expect from the rules of a fair, randomly shuffled deck.</p>
     </div>
-    <div class="reveal"><div class="eyebrow" style="color:#95dbd0">THE MATHEMATICAL RESULT</div><div class="result">A♠ = 2♣ = 1 / 52</div><p>Each card has exactly a <strong>1.923%</strong> chance of appearing immediately after the first ace. Different stories, identical odds.</p></div>
+    <div class="explain-block">
+      <h3>What did our experiment show?</h3>
+      <p>You have now shuffled <strong id="proof-total">0</strong> decks in total. Here's how often each card appeared <strong>immediately after the first ace</strong>:</p>
+      <div class="experiment-compare" aria-label="Experimental probability comparison">
+        <div class="compare-card">
+          <h4>Ace of Spades ♠</h4>
+          <strong id="proof-spade-rate">0.000%</strong>
+          <p id="proof-spade-count">0 of 0 shuffles</p>
+        </div>
+        <div class="compare-card">
+          <h4>Two of Clubs ♣</h4>
+          <strong id="proof-club-rate">0.000%</strong>
+          <p id="proof-club-count">0 of 0 shuffles</p>
+        </div>
+      </div>
+      <p class="difference-line" id="proof-difference">Difference: 0.000 percentage points</p>
+      <p>These percentages may be close, but experimental results can vary. Even a large simulation cannot prove that two probabilities are <em>exactly</em> equal. Can we prove the result mathematically?</p>
+    </div>
+    <div class="explain-block">
+      <h3>Why is it a tie?</h3>
+      <p>Here's a different way to think about the deck. Instead of shuffling thousands of times, imagine choosing <strong>one target card</strong>, taking it out, and putting it back in a random position.</p>
+      <div class="proof-case">
+        <div>
+          <h4>Suppose our card is the 2♣</h4>
+          <p>Set the 2♣ aside. Shuffle the remaining 51 cards. There are still four aces. Find the first ace in those 51 cards.</p>
+        </div>
+        <div>
+          <h4>Suppose our card is the A♠</h4>
+          <p>Set the A♠ aside instead. Shuffle the remaining 51 cards. There are now three aces. Find the first of those three.</p>
+        </div>
+      </div>
+      <p>In <strong>either case</strong>, imagine sliding the card we removed back into the deck. There are 52 possible gaps: one before the first card, 50 between consecutive cards, and one after the last card. In a fair shuffle, each of these positions is equally likely.</p>
+      <div class="gap-demo" aria-label="Illustration of one winning insertion gap immediately after the first ace">
+        <h4>Where would the target card need to go?</h4>
+        <div class="gap-cards" aria-hidden="true">
+          <span class="sample-ellipsis">…</span>
+          <span class="sample-card">7♥</span>
+          <span class="sample-card ace">A♥</span>
+          <span class="sample-gap">Put target here</span>
+          <span class="sample-card">9♣</span>
+          <span class="sample-ellipsis">…</span>
+        </div>
+        <p class="caption">This is just part of an example deck. The dashed green space is the <strong>one winning gap</strong> among 52 possible gaps.</p>
+      </div>
+      <p>Only inserting the target card <strong>immediately after the first ace</strong> makes it the next card. Put it anywhere else, and it won't be immediately after that first ace.</p>
+      <p>For the A♠, this even includes the possibility of placing it <em>before</em> the other aces. In that case the A♠ becomes the first ace itself, so it still cannot be the card <em>after</em> the first ace.</p>
+      <p>Whichever target we set aside, and however the other 51 cards were shuffled, exactly <strong>one of the 52 equally likely gaps</strong> works.</p>
+    </div>
+    <div class="proof-conclusion">
+      <div class="eyebrow" style="color:#9cddd2">THE THEORETICAL RESULT</div>
+      <div class="result">A♠ = 2♣ = 1 / 52</div>
+      <p>Each card has an exact probability of approximately <strong>1.923%</strong> of appearing immediately after the first ace. The experimental percentages may differ, but the theoretical probabilities are equal.</p>
+    </div>
   </section>
 </main>
 <footer class="footer"><div class="wrap"><span>THE FIRST ACE · An interactive mathematics resource</span><span>Uniform 52-card shuffles · Fisher–Yates algorithm · Anonymous prediction pilot</span></div></footer>
@@ -908,8 +1009,25 @@
     el('story-title').focus({preventScroll:true});
     el('story-section').scrollIntoView({behavior:reduced ? 'auto':'smooth',block:'start'});
   }
+  function renderProofComparison() {
+    if (!state.total) return;
+    const spadePct = percent(state.spade);
+    const clubPct = percent(state.club);
+    const diff = Math.abs(spadePct - clubPct);
+    el('proof-total').textContent = nfmt.format(state.total);
+    el('proof-spade-rate').textContent = spadePct.toFixed(3) + '%';
+    el('proof-club-rate').textContent = clubPct.toFixed(3) + '%';
+    el('proof-spade-count').textContent = nfmt.format(state.spade) + ' of ' + nfmt.format(state.total) + ' shuffles';
+    el('proof-club-count').textContent = nfmt.format(state.club) + ' of ' + nfmt.format(state.total) + ' shuffles';
+    el('proof-difference').textContent = 'Difference: ' + diff.toFixed(3) +
+      ' percentage points (' + nfmt.format(Math.abs(state.spade - state.club)) + ' shuffles).';
+  }
   function goToProof() {
     if (!journey.largeComplete) return;
+    renderProofComparison();
+    revealTheory(true);
+    el('large-theory-next').setAttribute('aria-expanded','true');
+    syncLiveResults();
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     el('proof-title').focus({preventScroll:true});
     el('proof-section').scrollIntoView({behavior:reduced ? 'auto':'smooth',block:'start'});
@@ -1072,7 +1190,7 @@
   }
   function revealTheory(visible) {
     for (const id of ['theory-axis', 'first-ace-theory', 'club-theory', 'mean-theory',
-      'theory-comparison', 'proof-section', 'theory-next']) {
+      'theory-comparison', 'proof-section']) {
       el(id).hidden = !visible;
     }
     document.querySelectorAll('.target').forEach(marker => {
@@ -1269,13 +1387,13 @@
       }
       if (count === 100000) {
         journey.largeComplete = true;
-        el('large-theory-next').hidden = false;
+        el('theory-callout').hidden = false;
         el('scroll-invite').hidden = true;
         el('hundredThousand').hidden = true;
         el('story-next-note').textContent = 'Your 100,000 additional shuffles are complete. Now compare with the mathematical explanation.';
-        revealTheory(true);
-        syncLiveResults();
-        el('large-progress-status').textContent = 'All 100,000 new shuffled decks are counted. Compare your results with the mathematical explanation.';
+        // The callout is now available; the mathematical explanation stays
+        // completely hidden until the visitor explicitly selects it.
+        el('large-progress-status').textContent = 'All 100,000 new decks are counted. Select the explanation below when you are ready.';
         el('bulk-status').textContent = nfmt.format(state.total) +
           ' shuffled decks recorded. The theoretical comparisons are now unlocked below.';
         el('evidence-intro').textContent = 'Now compare your experimental results with the theoretical probabilities. How closely do they agree?';
@@ -1310,7 +1428,8 @@
     el('scroll-invite').hidden = true;
     el('live-results-section').hidden = true;
     el('live-results-slot').replaceChildren();
-    el('large-theory-next').hidden = true;
+    el('theory-callout').hidden = true;
+    el('large-theory-next').setAttribute('aria-expanded','false');
     el('large-progress-bar').value = 0;
     el('large-progress-count').textContent = '0 / 100,000';
     el('large-progress-status').textContent = 'Ready to begin.';
@@ -1350,7 +1469,6 @@
   el('scroll-to-story').addEventListener('click', goToStory);
   document.querySelectorAll('[data-story-answer]').forEach(button =>
     button.addEventListener('click', () => respondToStory(button)));
-  el('theory-next').addEventListener('click', goToProof);
   el('large-theory-next').addEventListener('click', goToProof);
   el('reset').addEventListener('click', reset);
   renderStage(null,0);
