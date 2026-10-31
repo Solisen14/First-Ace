@@ -5,10 +5,11 @@ A one-page, self-contained interactive probability investigation.
 ## What students do
 
 1. Make a prediction, either saving it anonymously to the community poll or continuing without saving.
-2. Select **Flip the Deck** and watch a single shuffled deck reveal cards until the first ace and its next card.
-3. Answer a Yes/No reflection question chosen from the *actual result* (2♣ before the first ace, A♠ first, a target card next, or 2♣ still face down). The page explains the answer.
-4. Unlock 1,000- and 100,000-deck simulations and compare empirical outcomes with the theoretical probability of 1/52 for each target card.
-5. Explore why the Two of Clubs being earlier (20%) and the Ace of Spades being the first ace (25%) do not change that equality, then read the short insertion-gap proof.
+2. The page reveals an explanation of **experimental probability** and scrolls to it automatically. The heading is **Let's test what you think** for a chosen probability and **Let's try to figure it out** for **Not sure yet**.
+3. Select **Run the Experiment** to watch one shuffled deck reveal cards until the first ace and the following card.
+4. Answer a Yes/No reflection question chosen from the *actual result* (2♣ before the first ace, A♠ first, a target card next, or 2♣ still face down). The page explains the answer.
+5. Unlock 1,000- and 100,000-deck simulations and compare empirical outcomes with the theoretical probability of 1/52 for each target card.
+6. Explore why the Two of Clubs being earlier (20%) and the Ace of Spades being the first ace (25%) do not change that equality, then read the short insertion-gap proof.
 
 ## Running locally
 
