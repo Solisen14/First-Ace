@@ -325,6 +325,7 @@
       <button id="hundred" class="button" type="button">Run 100 Shuffles</button>
       <button id="thousand" class="button secondary" type="button" hidden>Run 1,000 Shuffles</button>
       <button id="hundredThousand" class="button secondary" type="button" hidden>Run 100,000 Shuffles</button>
+      <button id="theory-next" class="button secondary" type="button" hidden>See the Mathematical Explanation</button>
     </div>
     <div id="bulk-progress" class="bulk-progress" hidden>
       <label for="bulk-progress-bar"><span id="bulk-title">Running shuffles</span><strong id="bulk-count">0 / 100</strong></label>
@@ -335,9 +336,9 @@
       <div class="results">
         <div class="countbox"><div class="count" id="total" aria-live="polite">0</div><div class="caption">total decks shuffled</div></div>
         <div>
-          <div class="barrow"><div class="barlabel"><strong>Ace of Spades ♠</strong><span class="pct" id="spade-rate">0.000% · 0 decks</span></div><div class="track"><div class="fill" id="spade-fill"></div><div class="target" aria-hidden="true"></div></div></div>
-          <div class="barrow"><div class="barlabel"><strong>Two of Clubs ♣</strong><span class="pct" id="club-rate">0.000% · 0 decks</span></div><div class="track"><div class="fill gold" id="club-fill"></div><div class="target" aria-hidden="true"></div></div></div>
-          <div class="axis"><span>0%</span><span class="true">Dashed line: theoretical 1.923%</span><span id="axis-end">4%</span></div>
+          <div class="barrow"><div class="barlabel"><strong>Ace of Spades ♠</strong><span class="pct" id="spade-rate">0.000% · 0 decks</span></div><div class="track"><div class="fill" id="spade-fill"></div><div class="target" aria-hidden="true" hidden></div></div></div>
+          <div class="barrow"><div class="barlabel"><strong>Two of Clubs ♣</strong><span class="pct" id="club-rate">0.000% · 0 decks</span></div><div class="track"><div class="fill gold" id="club-fill"></div><div class="target" aria-hidden="true" hidden></div></div></div>
+          <div class="axis"><span>0%</span><span class="true" id="theory-axis" hidden>Dashed line: theoretical 1.923%</span><span id="axis-end">4%</span></div>
           <p class="outcome-note" id="outcome-note">Run a few shuffles to start collecting evidence. The bar scale changes as you collect more data.</p>
         </div>
       </div>
@@ -351,18 +352,19 @@
             <div class="ace-row"><div class="ace-label"><span>A♥ Hearts</span><strong id="first-hearts">0 (0%)</strong></div><div class="ace-bar"><div class="ace-fill" id="first-fill-hearts"></div></div></div>
             <div class="ace-row"><div class="ace-label"><span>A♦ Diamonds</span><strong id="first-diamonds">0 (0%)</strong></div><div class="ace-bar"><div class="ace-fill" id="first-fill-diamonds"></div></div></div>
             <div class="ace-row"><div class="ace-label"><span>A♣ Clubs</span><strong id="first-clubs">0 (0%)</strong></div><div class="ace-bar"><div class="ace-fill" id="first-fill-clubs"></div></div></div>
-            <p>Each ace has a theoretical 25% chance of being first.</p>
+            <p id="first-ace-theory" hidden>Each ace has a theoretical 25% chance of being first.</p>
           </div>
           <div class="extra-card">
             <h4>Did the 2♣ appear before every ace?</h4>
             <div class="extra-number" id="early-club-rate">—</div>
             <p id="early-club-count">0 of 0 shuffled decks</p>
-            <p>The theoretical probability is 20%.</p>
+            <p id="club-theory" hidden>The theoretical probability is 20%.</p>
           </div>
           <div class="extra-card">
             <h4>Average number of cards before the first ace</h4>
             <div class="extra-number" id="mean-before-ace">—</div>
-            <p>Count the non-ace cards turned over <strong>before</strong> the first ace, not including that ace. The theoretical average is 9.6 cards.</p>
+            <p>Count the non-ace cards turned over <strong>before</strong> the first ace, not including that ace.</p>
+            <p id="mean-theory" hidden>The theoretical average is 9.6 cards.</p>
           </div>
           <div class="extra-card">
             <h4>Longest run without an ace</h4>
@@ -371,14 +373,14 @@
           </div>
         </div>
       </div>
-      <div class="twist">
+      <div class="twist" id="theory-comparison" hidden>
         <div class="twist-box"><h4>What if the 2♣ appeared earlier?</h4><div class="fraction">1 in 5 <span style="font:500 14px var(--sans);color:var(--muted)">= 20%</span></div><p>The Two of Clubs comes before all four aces in 20% of shuffles.</p><div class="empirical" id="club-before">Observed: no shuffles yet</div></div>
         <div class="twist-box"><h4>What if the A♠ is the first ace?</h4><div class="fraction">1 in 4 <span style="font:500 14px var(--sans);color:var(--muted)">= 25%</span></div><p>The Ace of Spades itself is the first ace in 25% of shuffles.</p><div class="empirical" id="spade-first">Observed: no shuffles yet</div></div>
       </div>
     </div>
   </section>
   <section class="wrap section proof" id="proof-section" aria-labelledby="proof-title" hidden>
-    <div class="section-head"><span class="section-num">03 / THE REVEAL</span><h2 id="proof-title">Why is it a tie?</h2></div>
+    <div class="section-head"><span class="section-num">03 / THE REVEAL</span><h2 id="proof-title" tabindex="-1">Why is it a tie?</h2></div>
     <p class="proof-lead">The two cards are eliminated in different ways, but there's a surprisingly simple argument that works for <em>either</em> one.</p>
     <div class="proof-steps">
       <div class="proof-step"><div class="number">51</div><strong>Take out the target card.</strong><p>Remove the A♠ or the 2♣, then shuffle the other 51 cards. Find their first ace.</p></div>
@@ -625,7 +627,7 @@
     sumBeforeFirst: 0, longestAceFree: 0,
     last: null, busy: false
   };
-  const journey = {reflected: false, tenComplete: false, hundredComplete: false, thousandComplete: false, ranBatch: false};
+  const journey = {reflected: false, tenComplete: false, hundredComplete: false, thousandComplete: false, largeComplete: false};
   let reflectionAnswer = null;
   const controls = [el('one'), el('ten'), el('hundred'), el('thousand'), el('hundredThousand'), el('reset')];
 
@@ -747,6 +749,15 @@
     el('outcome-note').textContent = !state.total
       ? 'Run a few shuffles to start collecting evidence.'
       : `The next card was neither target in ${nfmt.format(state.other)} of ${nfmt.format(state.total)} shuffles. Bars show a 0–${scale}% scale and are capped at ${scale}%.`;
+  }
+  function revealTheory(visible) {
+    for (const id of ['theory-axis', 'first-ace-theory', 'club-theory', 'mean-theory',
+      'theory-comparison', 'proof-section', 'theory-next']) {
+      el(id).hidden = !visible;
+    }
+    document.querySelectorAll('.target').forEach(marker => {
+      marker.hidden = !visible;
+    });
   }
   function reflectionFor(e) {
     if (e.clubBefore) return {
@@ -894,10 +905,12 @@
     el('bulk-progress-bar').max = count;
     el('bulk-progress-bar').value = 0;
     el('bulk-count').textContent = '0 / ' + nfmt.format(count);
-    el('bulk-status').textContent = 'The cards above stay unchanged; the bars and statistics update live.';
-    // The same batch engine handles 100, 1,000, and 100,000, without card flips.
-    // Roughly 25 updates make the smaller batch visibly progressive.
-    const chunk = count === 100 ? 4 : count === 1000 ? 40 : 4000;
+    el('bulk-status').textContent = count === 100000
+      ? 'Counting 100,000 real shuffles. Watch the bars and totals move.'
+      : 'The cards above stay unchanged; the bars and statistics update live.';
+    // Every shuffle is calculated. Display updates are batched for a quick
+    // count-up animation; no individual card flips or invented results.
+    const chunk = count === 100 ? 4 : count === 1000 ? 40 : 5000;
     let done = 0;
     try {
       while (done < count) {
@@ -907,7 +920,7 @@
         renderResults();
         el('bulk-progress-bar').value = done;
         el('bulk-count').textContent = nfmt.format(done) + ' / ' + nfmt.format(count);
-        if (done < count) await new Promise(resolve => setTimeout(resolve, 70));
+        if (done < count) await new Promise(resolve => setTimeout(resolve, count === 100000 ? 25 : 70));
       }
       el('bulk-status').textContent = nfmt.format(count) + ' additional decks counted. The results now include ' + nfmt.format(state.total) + ' shuffles.';
       el('evidence-intro').textContent = 'You have now collected results from ' + nfmt.format(state.total) + ' shuffled decks. Which patterns are becoming clearer? Which differences might still be due to chance?';
@@ -918,9 +931,12 @@
         journey.thousandComplete = true;
         el('hundredThousand').hidden = false;
       }
-      if (count >= 1000) {
-        journey.ranBatch = true;
-        el('proof-section').hidden = false;
+      if (count === 100000) {
+        journey.largeComplete = true;
+        revealTheory(true);
+        el('bulk-status').textContent = nfmt.format(state.total) +
+          ' shuffled decks recorded. The theoretical comparisons are now unlocked below.';
+        el('evidence-intro').textContent = 'Now compare your experimental results with the theoretical probabilities. How closely do they agree?';
       }
     } finally {
       busy(false);
@@ -937,7 +953,7 @@
     journey.tenComplete = false;
     journey.hundredComplete = false;
     journey.thousandComplete = false;
-    journey.ranBatch = false;
+    journey.largeComplete = false;
     reflectionAnswer = null;
     el('reflection').hidden = true;
     el('reflection-run').hidden = true;
@@ -947,7 +963,7 @@
     el('bulk-progress-bar').value = 0;
     el('evidence-intro').textContent = 'One shuffle tells us very little. Even 10 more is a small sample, especially for outcomes that happen rarely. What do you notice so far?';
     el('results-section').hidden = true;
-    el('proof-section').hidden = true;
+    revealTheory(false);
     el('ten').hidden = true;
     el('thousand').hidden = true;
     el('hundredThousand').hidden = true;
@@ -963,9 +979,18 @@
   el('hundred').addEventListener('click', () => batch(100));
   el('thousand').addEventListener('click', () => batch(1000));
   el('hundredThousand').addEventListener('click', () => batch(100000));
+  el('theory-next').addEventListener('click', () => {
+    if (!journey.largeComplete) return;
+    el('proof-title').focus({preventScroll:true});
+    el('proof-section').scrollIntoView({
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      block:'start'
+    });
+  });
   el('reset').addEventListener('click', reset);
   renderStage(null,0);
   renderResults();
+  revealTheory(false);
   initPoll();
   // Exposes a small test-only interface for verification in a local browser.
   window.__firstAceTest = { shuffleDeck, evaluate, state, batch, reset };
