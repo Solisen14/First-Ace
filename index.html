@@ -170,6 +170,16 @@
     .bulk-progress label { display:flex; gap:12px; justify-content:space-between; font-size:15px; font-weight:700; }
     .bulk-progress progress { width:100%; height:13px; margin:10px 0 8px; accent-color:var(--teal); }
     .bulk-progress p { font-size:14px; color:#36574e; margin:0; }
+    .scroll-invite { margin:18px 0 22px; background:#e9f4f0; border:1px solid #c3dfd6; border-radius:13px; padding:20px 22px; }
+    .scroll-invite p { font-size:17px; line-height:1.5; margin:0 0 14px; color:#2d4d46; }
+    .scroll-invite .button {font-size:16px;}
+    .live-results {scroll-margin-top:18px; padding-top:30px; border-top:1px solid var(--edge); }
+    .live-results > .section-head {margin-bottom:13px;}
+    .live-results .lead-in { color:var(--muted); font-size:17px; margin:0 0 19px; }
+    .live-results .bulk-progress { margin-bottom:19px; }
+    .live-results .finish-actions {margin:24px 0 0; display:flex; gap:12px; flex-wrap:wrap;}
+    .live-results .finish-actions .button {font-size:17px;}
+
     .extra-data { border-top:1px solid var(--edge); margin-top:25px; padding-top:24px; }
     .extra-data h3 { margin:0 0 7px; font:700 25px/1.25 var(--serif); }
     .extra-data .intro { margin:0 0 17px; font-size:16px; color:var(--muted); }
@@ -366,7 +376,11 @@
       <progress id="bulk-progress-bar" max="100" value="0"></progress>
       <p id="bulk-status">The bars and statistics update as each batch finishes.</p>
     </div>
-    <div class="lab">
+    <div id="scroll-invite" class="scroll-invite" hidden>
+      <p><strong>Your 1,000 shuffles are complete.</strong> Scroll down to explore the data analysis and think about what your results might mean.</p>
+      <button id="scroll-to-story" class="button" type="button">Explore the data analysis ↓</button>
+    </div>
+    <div class="lab" id="evidence-lab">
       <div class="results">
         <div class="countbox"><div class="count" id="total" aria-live="polite">0</div><div class="caption">total decks shuffled</div></div>
         <div>
@@ -471,6 +485,17 @@
         </article>
       </div>
     </div>
+  </section>
+  <section class="wrap section live-results" id="live-results-section" aria-labelledby="live-results-title" hidden>
+    <div class="section-head"><span class="section-num">04 / A MUCH LARGER EXPERIMENT</span><h2 id="live-results-title" tabindex="-1">Watch the evidence grow</h2></div>
+    <p class="lead-in">The same graphs and statistics are back, directly below your data analysis. Watch them update as 100,000 new decks are actually shuffled.</p>
+    <div class="bulk-progress">
+      <label for="large-progress-bar"><span>Running 100,000 shuffles</span><strong id="large-progress-count">0 / 100,000</strong></label>
+      <progress id="large-progress-bar" max="100000" value="0"></progress>
+      <p id="large-progress-status" role="status" aria-live="polite">Ready to begin.</p>
+    </div>
+    <div id="live-results-slot"></div>
+    <div class="finish-actions"><button id="large-theory-next" class="button" type="button" hidden>See the Mathematical Explanation</button></div>
   </section>
   <section class="wrap section proof" id="proof-section" aria-labelledby="proof-title" hidden>
     <div class="section-head"><span class="section-num">03 / THE REVEAL</span><h2 id="proof-title" tabindex="-1">Why is it a tie?</h2></div>
@@ -846,8 +871,49 @@
     el('outcome-note').textContent = !state.total
       ? 'Run a few shuffles to start collecting evidence.'
       : `The next card was neither target in ${nfmt.format(state.other)} of ${nfmt.format(state.total)} shuffles. Bars show a 0–${scale}% scale and are capped at ${scale}%.`;
+    syncLiveResults();
   }
 
+  // The 100,000-shuffle stage mirrors the original evidence panel below
+  // the story; both draw from the same simulation state and calculations.
+  function prepareLiveResults() {
+    const slot = el('live-results-slot');
+    if (!slot.children.length) {
+      const copy = el('evidence-lab').cloneNode(true);
+      copy.id = 'evidence-lab-large';
+      copy.querySelectorAll('[id]').forEach(node => { node.id += '-large'; });
+      copy.querySelectorAll('[aria-labelledby]').forEach(node => {
+        node.setAttribute('aria-labelledby',
+          node.getAttribute('aria-labelledby').split(/\s+/).map(id => id + '-large').join(' '));
+      });
+      copy.querySelectorAll('[aria-live]').forEach(node => node.setAttribute('aria-live', 'off'));
+      slot.appendChild(copy);
+    }
+    syncLiveResults();
+  }
+  function syncLiveResults() {
+    if (!el('live-results-slot').children.length) return;
+    el('evidence-lab').querySelectorAll('[id]').forEach(original => {
+      const copy = el(original.id + '-large');
+      if (!copy) return;
+      if (!original.children.length) copy.textContent = original.textContent;
+      copy.style.width = original.style.width;
+      copy.style.left = original.style.left;
+      copy.hidden = original.hidden;
+    });
+  }
+  function goToStory() {
+    if (!journey.thousandComplete || el('story-section').hidden) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el('story-title').focus({preventScroll:true});
+    el('story-section').scrollIntoView({behavior:reduced ? 'auto':'smooth',block:'start'});
+  }
+  function goToProof() {
+    if (!journey.largeComplete) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el('proof-title').focus({preventScroll:true});
+    el('proof-section').scrollIntoView({behavior:reduced ? 'auto':'smooth',block:'start'});
+  }
   // Scrollytelling is a snapshot of the 1,000-shuffle milestone, so the
   // questions do not change if visitors later run additional batches.
   function storyFromResults(snapshot) {
@@ -1136,9 +1202,14 @@
     el('bulk-status').textContent = count === 100000
       ? 'Counting 100,000 real shuffles. Watch the bars and totals move.'
       : 'The cards above stay unchanged; the bars and statistics update live.';
+    if (count === 100000) {
+      el('large-progress-bar').value = 0;
+      el('large-progress-count').textContent = '0 / 100,000';
+      el('large-progress-status').textContent = 'The count and graphs update together as each batch is calculated.';
+    }
     // Every shuffle is calculated. Display updates are batched for a quick
     // count-up animation; no individual card flips or invented results.
-    const chunk = count === 100 ? 4 : count === 1000 ? 40 : 5000;
+    const chunk = count === 100 ? 4 : count === 1000 ? 40 : 2000;
     let done = 0;
     try {
       while (done < count) {
@@ -1148,7 +1219,11 @@
         renderResults();
         el('bulk-progress-bar').value = done;
         el('bulk-count').textContent = nfmt.format(done) + ' / ' + nfmt.format(count);
-        if (done < count) await new Promise(resolve => setTimeout(resolve, count === 100000 ? 25 : 70));
+        if (count === 100000) {
+          el('large-progress-bar').value = done;
+          el('large-progress-count').textContent = nfmt.format(done) + ' / 100,000';
+        }
+        if (done < count) await new Promise(resolve => setTimeout(resolve, count === 100000 ? 60 : 70));
       }
       el('bulk-status').textContent = nfmt.format(count) + ' additional decks counted. The results now include ' + nfmt.format(state.total) + ' shuffles.';
       el('evidence-intro').textContent = 'You have now collected results from ' + nfmt.format(state.total) + ' shuffled decks. Which patterns are becoming clearer? Which differences might still be due to chance?';
@@ -1158,18 +1233,23 @@
       } else if (count === 1000 && !journey.thousandComplete) {
         journey.thousandComplete = true;
         buildStory();
+        el('scroll-invite').hidden = false;
         // Move the next step to the bottom of the story, not above the data.
         el('hundredThousand').hidden = false;
         el('hundred').hidden = true;
         el('thousand').hidden = true;
         el('evidence-intro').textContent = 'You have more than 1,000 trials. Examine the statistics below, then scroll through the questions that follow.';
-        el('bulk-status').textContent = '1,000 additional decks counted. Scroll down through the data to examine what you found.';
+        el('bulk-status').textContent = '1,000 additional decks counted. Scroll down to explore your data analysis.';
       }
       if (count === 100000) {
         journey.largeComplete = true;
+        el('large-theory-next').hidden = false;
+        el('scroll-invite').hidden = true;
         el('hundredThousand').hidden = true;
         el('story-next-note').textContent = 'Your 100,000 additional shuffles are complete. Now compare with the mathematical explanation.';
         revealTheory(true);
+        syncLiveResults();
+        el('large-progress-status').textContent = 'All 100,000 new shuffled decks are counted. Compare your results with the mathematical explanation.';
         el('bulk-status').textContent = nfmt.format(state.total) +
           ' shuffled decks recorded. The theoretical comparisons are now unlocked below.';
         el('evidence-intro').textContent = 'Now compare your experimental results with the theoretical probabilities. How closely do they agree?';
@@ -1201,6 +1281,13 @@
     updateTenProgress(0);
     el('bulk-progress').hidden = true;
     el('bulk-progress-bar').value = 0;
+    el('scroll-invite').hidden = true;
+    el('live-results-section').hidden = true;
+    el('live-results-slot').replaceChildren();
+    el('large-theory-next').hidden = true;
+    el('large-progress-bar').value = 0;
+    el('large-progress-count').textContent = '0 / 100,000';
+    el('large-progress-status').textContent = 'Ready to begin.';
     el('evidence-intro').textContent = 'One shuffle tells us very little. Even 10 more is a small sample, especially for outcomes that happen rarely. What do you notice so far?';
     el('results-section').hidden = true;
     el('story-section').hidden = true;
@@ -1223,24 +1310,22 @@
   el('thousand').addEventListener('click', () => batch(1000));
   el('hundredThousand').addEventListener('click', async () => {
     if (state.busy || !pollState.predicted || !journey.thousandComplete) return;
+    prepareLiveResults();
+    el('live-results-section').hidden = false;
+    el('large-progress-status').textContent = 'Your existing results are shown below. Adding 100,000 new shuffles…';
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    el('results-section').scrollIntoView({
-      behavior: reduced ? 'auto' : 'smooth',
-      block: 'start'
+    el('live-results-title').focus({preventScroll:true});
+    el('live-results-section').scrollIntoView({
+      behavior: reduced ? 'auto' : 'smooth', block:'start'
     });
     if (!reduced) await new Promise(resolve => setTimeout(resolve, 340));
     await batch(100000);
   });
+  el('scroll-to-story').addEventListener('click', goToStory);
   document.querySelectorAll('[data-story-answer]').forEach(button =>
     button.addEventListener('click', () => respondToStory(button)));
-  el('theory-next').addEventListener('click', () => {
-    if (!journey.largeComplete) return;
-    el('proof-title').focus({preventScroll:true});
-    el('proof-section').scrollIntoView({
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-      block:'start'
-    });
-  });
+  el('theory-next').addEventListener('click', goToProof);
+  el('large-theory-next').addEventListener('click', goToProof);
   el('reset').addEventListener('click', reset);
   renderStage(null,0);
   renderResults();
