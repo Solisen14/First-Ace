@@ -12,7 +12,7 @@ A one-page, self-contained interactive probability investigation.
 
 ## Running locally
 
-Open `index.html` in a web browser. No build tools, account, external libraries, internet connection, or server are required.
+Open `index.html` in a web browser to use the deck simulation offline. The shared prediction feature requires an internet connection and a working Google Apps Script deployment.
 
 ## Publishing with GitHub Pages
 
@@ -22,6 +22,10 @@ Open `index.html` in a web browser. No build tools, account, external libraries,
 
 This project is independent of Collatz Laboratory. Do not modify or deploy to the Collatz Laboratory repository.
 
+## Shared prediction pilot
+
+The prediction interface is connected to a private Google Sheet through the deployed Apps Script endpoint. Visitor totals are shown only after a prediction has been recorded. For teachers using shared devices, an "Another participant on this device" link allows the next student to participate, but it does not authenticate one vote per student.
+
 ## Mathematical note
 
 For a specified target card (A♠ or 2♣), remove it from the deck and shuffle the remaining 51 cards uniformly. The removed card can be inserted into any of the 52 gaps with equal probability. Exactly one gap, the gap immediately after the first ace in the 51-card deck, makes the target card immediately follow the first ace in the final 52-card deck. Therefore each target has probability 1/52.
@@ -30,4 +34,4 @@ The Two of Clubs comes before all four aces with probability 1/5, and A♠ is it
 
 ## Accessibility and privacy
 
-Responsive desktop/mobile layout, real buttons with keyboard focus, a text readout alongside the visual card deck, and reduced-motion support. All simulation runs in the browser. No network calls, analytics, storage, or student data collection.
+Responsive desktop/mobile layout, accessible radio buttons, keyboard focus, a text readout alongside the visual deck, and reduced-motion support. Card simulation runs entirely in the browser. If a visitor chooses to save a prediction, the page sends their selected answer and a random submission token to an Apps Script web app, which writes them with a timestamp to a private Google Sheet. The browser may store that prediction and token locally to prevent accidental repeat submissions. No names, emails, or school identifiers are requested by the application; the Google platform may have its own service logs. The poll is a pilot, not an authenticated or tamper-proof survey. See [backend setup](backend/SETUP.md).
