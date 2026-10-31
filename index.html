@@ -229,7 +229,7 @@
         </div>
         <p class="poll-status" id="poll-status" role="status" aria-live="polite">Choose an answer, then save your prediction or continue without saving.</p>
         <div class="guided-cta" id="poll-next" hidden>
-          <button class="button" type="button" id="poll-to-deck">Flip the deck</button>
+          <button class="button" type="button" id="poll-to-deck">Flip the Deck</button>
           <p class="poll-fine">One shuffled deck first. Then we'll look at what your result means.</p>
         </div>
         <p class="poll-fine">Anonymous pilot: your answer and a random submission token are saved, but not your name or email. If you prefer not to share your answer, choose “Continue without saving”.</p>
@@ -254,7 +254,7 @@
       <div class="lab-top">
         <div><h3>Try the experiment</h3><p>Each trial starts with a fresh, randomly shuffled deck.</p></div>
         <div class="buttons" aria-label="Simulation controls">
-          <button id="one" class="button" type="button">Flip the deck</button>
+          <button id="one" class="button" type="button">Flip the Deck</button>
           <button id="thousand" class="button secondary" type="button" hidden>+1,000</button>
           <button id="hundredThousand" class="button secondary" type="button" hidden>+100,000</button>
           <button id="reset" class="reset" type="button">Reset</button>
@@ -663,6 +663,7 @@
     reflectionAnswer = reflectionFor(e);
     el('reflection-title').textContent = reflectionAnswer.question;
     el('reflection').hidden = false;
+    el('reflection-title').focus({preventScroll:true});
     el('reflection-feedback').hidden = true;
     el('reflection-feedback').replaceChildren();
     el('reflection-follow').hidden = true;
@@ -749,7 +750,7 @@
     el('proof-section').hidden = true;
     el('thousand').hidden = true;
     el('hundredThousand').hidden = true;
-    el('one').textContent = 'Flip the deck';
+    el('one').textContent = 'Flip the Deck';
     el('experiment-hint').textContent = 'Your prediction is in. Now flip one deck and watch for the first ace.';
     renderStage(null, 0);
     renderResults();
