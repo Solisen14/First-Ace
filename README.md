@@ -9,8 +9,10 @@ A one-page, self-contained interactive probability investigation.
 3. Select **Run the Experiment** to watch one shuffled deck reveal cards until the first ace and the following card.
 4. Answer a Yes/No reflection question chosen from the *actual result* (2♣ before the first ace, A♠ first, a target card next, or 2♣ still face down). The page explains the answer.
 5. Select **Run 10 Shuffles**. Ten new decks reveal their cards sequentially, with an accessible progress indicator and updated counts after each shuffle. The larger evidence section remains hidden until all ten have finished, then comes into view. Its totals include the first deck (11 trials).
-6. Unlock larger 1,000- and 100,000-deck simulations and compare experimental outcomes with the theoretical probability of 1/52 for each target card. The chart shows a 0–20% scale for smaller samples (under 100 decks) and a 0–4% scale for larger samples, with caps marked in the explanatory text.
-7. Explore why the Two of Clubs being earlier (20%) and the Ace of Spades being the first ace (25%) do not change that equality, then read the short insertion-gap proof.
+6. In **What do the shuffles say?**, select **Run 100 Shuffles**. The bars, totals and extra statistics update progressively without card-flip animations. After the guided 11 trials, this adds 100 more for a total of 111.
+7. Unlock **Run 1,000 Shuffles** and then **Run 100,000 Shuffles**. The chart uses a 0–20% scale for fewer than 100 decks and a 0–4% scale for larger samples, capping bars that exceed the scale.
+8. Explore other patterns: which ace comes first (theoretical 25% each), whether the Two of Clubs comes before all aces (20% theoretical), the average number of non-aces **before** the first ace (theoretical mean 9.6), and the longest ace-free run **anywhere in a full shuffled deck**, including face-down cards.
+9. Read the short insertion-gap proof showing the theoretical probability of 1/52 for each target card.
 
 ## Running locally
 
