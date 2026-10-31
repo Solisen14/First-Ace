@@ -117,6 +117,35 @@
     .reveal p { max-width:660px; margin:0 auto; color:#d4e0e0; font-size:14px; }
     .footer { border-top:1px solid var(--edge); color:var(--muted); font-size:12px; padding:25px 0 38px; margin-top:35px; }
     .footer .wrap { display:flex; align-items:center; justify-content:space-between; gap:15px; flex-wrap:wrap; }
+
+    /* Anonymous prediction pilot */
+    .poll-card { display:grid; grid-template-columns:1.05fr .95fr; gap:28px; align-items:start; }
+    .poll-prompt { margin:0 0 14px; color:#465660; font-size:15px; }
+    .poll-options { border:0; padding:0; margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+    .poll-choice { display:flex; align-items:center; gap:9px; min-height:52px; padding:10px 12px; border:1px solid #d5dddc; border-radius:10px; cursor:pointer; font-weight:650; font-size:14px; }
+    .poll-choice:has(input:checked) { border-color:var(--teal); background:var(--teal-wash); }
+    .poll-choice:focus-within { outline:2px solid var(--teal); outline-offset:2px; }
+    .poll-choice input { accent-color:var(--teal); width:18px; height:18px; margin:0; flex:none; }
+    .poll-action { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:16px; }
+    .poll-status { color:var(--muted); font-size:13px; margin:10px 0 0; min-height:20px; }
+    .poll-status.error { color:#a43e3e; }
+    .poll-fine { font-size:12px; color:var(--muted); margin:14px 0 0; }
+    .poll-results { background:#f6f9f8; border:1px solid #e0e8e5; border-radius:13px; padding:20px; }
+    .poll-results h3 { margin:0 0 4px; font-size:17px; }
+    .poll-total { color:var(--muted); font-size:13px; margin:0 0 18px; }
+    .poll-row { margin-bottom:14px; }
+    .poll-label { display:flex; justify-content:space-between; gap:8px; font-size:13px; margin-bottom:5px; }
+    .poll-label strong { font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .poll-track { height:12px; border-radius:8px; overflow:hidden; background:#e2e9e6; }
+    .poll-fill { height:100%; background:#5079ad; width:0; transition:width .3s; }
+    .poll-fill.clubs { background:#c18e50; }
+    .poll-fill.equal { background:var(--teal); }
+    .poll-fill.unsure { background:#8d969b; }
+    [hidden] { display:none !important; }
+    @media (max-width:740px) {
+      .poll-card { grid-template-columns:1fr; gap:20px; }
+      .poll-options { grid-template-columns:1fr; }
+    }
     @media (max-width:740px) {
       .wrap { padding:0 16px; }
       .topbar .wrap { min-height:60px; }
@@ -164,6 +193,37 @@
       <div class="bigcard black"><span class="corner">A<small>♠</small></span><span class="center-suit" aria-hidden="true">♠</span></div>
       <span class="hero-or">or</span>
       <div class="bigcard black"><span class="corner">2<small>♣</small></span><span class="center-suit" aria-hidden="true">♣</span></div>
+    </div>
+  </section>
+
+  <section class="wrap section" id="prediction-section" aria-labelledby="prediction-title">
+    <div class="section-head"><span class="section-num">PREDICT</span><h2 id="prediction-title">What do you think?</h2></div>
+    <div class="lab poll-card">
+      <div>
+        <p class="poll-prompt">Which card is more likely to appear immediately after the first ace?</p>
+        <fieldset class="poll-options" id="poll-options" aria-label="Choose your prediction">
+          <label class="poll-choice"><input type="radio" name="prediction" value="ace_spades">Ace of Spades ♠</label>
+          <label class="poll-choice"><input type="radio" name="prediction" value="two_clubs">Two of Clubs ♣</label>
+          <label class="poll-choice"><input type="radio" name="prediction" value="equally_likely">Equally likely</label>
+          <label class="poll-choice"><input type="radio" name="prediction" value="not_sure">Not sure yet</label>
+        </fieldset>
+        <div class="poll-action">
+          <button class="button" id="poll-submit" type="button" disabled>Save my prediction</button>
+          <button class="reset" id="poll-again" type="button" hidden>Another participant on this device</button>
+        </div>
+        <p class="poll-status" id="poll-status" role="status" aria-live="polite">Choose an answer before you start the experiment.</p>
+        <p class="poll-fine">Anonymous pilot: your answer and a random submission token are saved, but not your name or email. You can still try the simulation without voting.</p>
+      </div>
+      <div class="poll-results" id="poll-results" hidden>
+        <h3>How others predicted</h3>
+        <p class="poll-total" id="poll-total" aria-live="polite">Loading predictions…</p>
+        <div class="poll-row"><div class="poll-label"><span>Ace of Spades</span><strong id="poll-label-ace_spades">0%</strong></div><div class="poll-track"><div class="poll-fill" id="poll-fill-ace_spades"></div></div></div>
+        <div class="poll-row"><div class="poll-label"><span>Two of Clubs</span><strong id="poll-label-two_clubs">0%</strong></div><div class="poll-track"><div class="poll-fill clubs" id="poll-fill-two_clubs"></div></div></div>
+        <div class="poll-row"><div class="poll-label"><span>Equally likely</span><strong id="poll-label-equally_likely">0%</strong></div><div class="poll-track"><div class="poll-fill equal" id="poll-fill-equally_likely"></div></div></div>
+        <div class="poll-row"><div class="poll-label"><span>Not sure yet</span><strong id="poll-label-not_sure">0%</strong></div><div class="poll-track"><div class="poll-fill unsure" id="poll-fill-not_sure"></div></div></div>
+        <button type="button" class="reset" id="poll-refresh">Refresh results</button>
+        <p class="poll-fine">These are visitors' predictions, not the actual probabilities.</p>
+      </div>
     </div>
   </section>
   <section class="wrap section" aria-labelledby="experiment-title">
@@ -220,10 +280,187 @@
     <div class="reveal"><div class="eyebrow" style="color:#95dbd0">THE MATHEMATICAL RESULT</div><div class="result">A♠ = 2♣ = 1 / 52</div><p>Each card has exactly a <strong>1.923%</strong> chance of appearing immediately after the first ace. Different stories, identical odds.</p></div>
   </section>
 </main>
-<footer class="footer"><div class="wrap"><span>THE FIRST ACE · An interactive mathematics resource</span><span>Uniform 52-card shuffles · Fisher–Yates algorithm · No data collected</span></div></footer>
+<footer class="footer"><div class="wrap"><span>THE FIRST ACE · An interactive mathematics resource</span><span>Uniform 52-card shuffles · Fisher–Yates algorithm · Anonymous prediction pilot</span></div></footer>
 <script>
 (function () {
   'use strict';
+
+  /* Shared anonymous predictions; deliberately independent of deck simulation. */
+  const POLL_URL = 'https://script.google.com/macros/s/AKfycbzBfS8f-oEVjeamg2PC0PkiZbcuF8LmBRDl2Q_rtW__rDxj8c4d5fspL9QRupqrgOITaA/exec';
+  const POLL_STORAGE_KEY = 'first-ace-prediction-pilot-v1';
+  const POLL_CHOICES = ['ace_spades', 'two_clubs', 'equally_likely', 'not_sure'];
+  const pollState = {saved: null, busy:false, request:0};
+  const pollEl = id => document.getElementById(id);
+  const pollRadios = () => Array.from(document.querySelectorAll('input[name="prediction"]'));
+  const isPollToken = token => typeof token === 'string' && /^[A-Za-z0-9_-]{24,80}$/.test(token);
+  const isPollChoice = choice => POLL_CHOICES.includes(choice);
+
+  function getPollSaved() {
+    try {
+      const value = JSON.parse(localStorage.getItem(POLL_STORAGE_KEY));
+      return value && isPollChoice(value.choice) && isPollToken(value.token) ? value : null;
+    } catch (_) { return null; }
+  }
+  function setPollSaved(value) {
+    pollState.saved = value;
+    try {
+      if (value) localStorage.setItem(POLL_STORAGE_KEY, JSON.stringify(value));
+      else localStorage.removeItem(POLL_STORAGE_KEY);
+    } catch (_) { /* Browsers with disabled storage still work for this session. */ }
+  }
+  function pollStatus(message, error) {
+    const status = pollEl('poll-status');
+    status.textContent = message;
+    status.classList.toggle('error', !!error);
+  }
+  function pollBusy(value) {
+    pollState.busy = value;
+    pollEl('poll-submit').disabled = value || (!pollState.saved && !pollRadios().some(r => r.checked));
+    pollEl('poll-refresh').disabled = value;
+  }
+  function pollToken() {
+    const bytes = new Uint8Array(24);
+    if (!window.crypto || !window.crypto.getRandomValues) throw new Error('Secure random generator unavailable.');
+    window.crypto.getRandomValues(bytes);
+    return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+  }
+  function pollGet(token) {
+    return new Promise((resolve, reject) => {
+      const callback = '__firstAcePoll' + (++pollState.request);
+      const tag = document.createElement('script');
+      let completed = false;
+      const done = (error, value) => {
+        if (completed) return;
+        completed = true;
+        clearTimeout(timeout);
+        tag.remove();
+        try { delete window[callback]; } catch (_) { window[callback] = undefined; }
+        error ? reject(error) : resolve(value);
+      };
+      window[callback] = data => done(null, data);
+      tag.onerror = () => done(new Error('Could not load predictions.'));
+      const timeout = setTimeout(() => done(new Error('Prediction service timed out.')), 12000);
+      const query = new URLSearchParams({callback, t: String(Date.now())});
+      if (token) query.set('token', token);
+      tag.src = POLL_URL + '?' + query.toString();
+      document.head.appendChild(tag);
+    });
+  }
+  function renderPollCounts(data) {
+    if (!data || data.ok !== true || !data.counts) throw new Error('Prediction service unavailable.');
+    const total = Math.max(0, Number(data.total) || 0);
+    pollEl('poll-total').textContent = total.toLocaleString('en-CA') + (total === 1 ? ' prediction so far' : ' predictions so far');
+    for (const choice of POLL_CHOICES) {
+      const count = Math.max(0, Number(data.counts[choice]) || 0);
+      const percent = total ? count * 100 / total : 0;
+      pollEl('poll-label-' + choice).textContent = percent.toFixed(1) + '% · ' + count.toLocaleString('en-CA');
+      pollEl('poll-fill-' + choice).style.width = Math.min(100, percent) + '%';
+    }
+    pollEl('poll-results').hidden = false;
+  }
+  function showPollRecorded(data) {
+    renderPollCounts(data);
+    pollEl('poll-submit').hidden = true;
+    pollEl('poll-again').hidden = false;
+    pollRadios().forEach(r => { r.checked = r.value === pollState.saved.choice; r.disabled = true; });
+    pollStatus('Prediction saved. Compare your choice with everyone else.');
+  }
+  async function confirmPoll(token, retries) {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const result = await pollGet(token);
+        if (result && result.ok === true && result.recorded === true) return result;
+      } catch (_) { /* Retry briefly; Apps Script sometimes takes a moment to complete. */ }
+      if (attempt + 1 < retries) await new Promise(resolve => setTimeout(resolve, 900));
+    }
+    return null;
+  }
+  async function submitPoll() {
+    if (pollState.busy) return;
+    const selection = pollRadios().find(r => r.checked);
+    if (!selection) return;
+    try {
+      const saved = pollState.saved;
+      if (saved && saved.choice !== selection.value) {
+        pollStatus('Please retry your original prediction before choosing another.', true);
+        return;
+      }
+      if (!saved) setPollSaved({choice: selection.value, token: pollToken(), pending:true});
+      pollBusy(true);
+      pollStatus('Saving your prediction…');
+      let posted = false;
+      try {
+        // Google Apps Script does not enable CORS, so use a simple opaque POST
+        // and confirm the write separately through its read-only JSONP endpoint.
+        await fetch(POLL_URL, {
+          method: 'POST', mode: 'no-cors',
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: new URLSearchParams({choice: pollState.saved.choice, token: pollState.saved.token})
+        });
+        posted = true;
+      } catch (_) { /* Confirmation below determines whether the submission succeeded. */ }
+      const result = await confirmPoll(pollState.saved.token, posted ? 5 : 2);
+      if (result) {
+        setPollSaved({...pollState.saved, pending:false});
+        showPollRecorded(result);
+      } else {
+        pollStatus('Unable to confirm the save. Select “Save my prediction” to retry, or check your connection.', true);
+      }
+    } catch (_) {
+      pollStatus('Could not create a secure submission. Check your browser and try again.', true);
+    } finally { pollBusy(false); }
+  }
+  async function refreshPoll() {
+    if (pollState.busy) return;
+    pollBusy(true);
+    pollStatus('Refreshing the totals…');
+    try {
+      renderPollCounts(await pollGet());
+      pollStatus('Prediction saved. Results updated.');
+    } catch (_) { pollStatus('Results could not be refreshed. Try again later.', true); }
+    finally { pollBusy(false); }
+  }
+  async function initPoll() {
+    pollRadios().forEach(r => r.addEventListener('change', () => {
+      if (!pollState.saved) pollEl('poll-submit').disabled = false;
+    }));
+    pollEl('poll-submit').addEventListener('click', submitPoll);
+    pollEl('poll-refresh').addEventListener('click', refreshPoll);
+    pollEl('poll-again').addEventListener('click', () => {
+      if (!window.confirm('Start a new prediction for a different participant using this device?')) return;
+      setPollSaved(null);
+      pollRadios().forEach(r => {r.checked = false; r.disabled = false;});
+      pollEl('poll-results').hidden = true;
+      pollEl('poll-submit').hidden = false;
+      pollEl('poll-submit').disabled = true;
+      pollEl('poll-again').hidden = true;
+      pollStatus('Choose an answer before you start the experiment.');
+    });
+    const saved = getPollSaved();
+    if (!saved) return;
+    setPollSaved(saved);
+    pollRadios().forEach(r => {r.checked = r.value === saved.choice; r.disabled = true;});
+    pollBusy(true);
+    pollStatus('Checking your previous prediction…');
+    try {
+      const result = await pollGet(saved.token);
+      if (result && result.ok && result.recorded) {
+        setPollSaved({...saved, pending:false});
+        showPollRecorded(result);
+      } else if (saved.pending) {
+        pollRadios().forEach(r => {r.disabled = false;});
+        pollStatus('Your earlier prediction was not confirmed. Select “Save my prediction” to retry.');
+      } else {
+        // A previously recorded vote may have been cleared by the owner during the pilot.
+        setPollSaved(null);
+        pollRadios().forEach(r => {r.disabled = false;});
+        pollStatus('Your earlier prediction was not found. You can submit again.');
+      }
+    } catch (_) {
+      pollRadios().forEach(r => {r.disabled = false;});
+      pollStatus('Unable to check your earlier prediction. Try again when online.', true);
+    } finally {pollBusy(false);}
+  }
   const SUITS = [
     { symbol: '♠', label: 'Spades', black: true },
     { symbol: '♥', label: 'Hearts', black: false },
@@ -379,6 +616,7 @@
   el('reset').addEventListener('click', reset);
   renderStage(null,0);
   renderResults();
+  initPoll();
   // Exposes a small test-only interface for verification in a local browser.
   window.__firstAceTest = { shuffleDeck, evaluate, state, batch, reset };
 }());
