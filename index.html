@@ -722,17 +722,21 @@
     controls.forEach(c => c.disabled = yes);
     el('reflection-run').disabled = yes;
   }
-  async function animateDeck(e, millisecondsPerCard) {
+  async function animateDeck(e, millisecondsPerCard, trialLabel = '') {
     const stop = e.first + 2;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const show = count => {
+      renderStage(e, count);
+      if (trialLabel) el('deck-title').textContent = trialLabel;
+    };
     if (reduced) {
-      renderStage(e, stop);
+      show(stop);
       return;
     }
-    renderStage(e, 0);
+    show(0);
     for (let n = 1; n <= stop; n++) {
       await new Promise(resolve => setTimeout(resolve, millisecondsPerCard));
-      renderStage(e, n);
+      show(n);
     }
   }
   function updateTenProgress(done) {
@@ -754,7 +758,7 @@
     try {
       for (let trial = 1; trial <= 10; trial++) {
         const e = evaluate(shuffleDeck());
-        await animateDeck(e, 65);
+        await animateDeck(e, 65, 'Shuffle ' + trial + ' of 10');
         record(e);
         renderResults();
         updateTenProgress(trial);
