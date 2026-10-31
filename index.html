@@ -159,6 +159,11 @@
     .reflection-feedback strong { display:block; margin-bottom:4px; }
     .reflection-follow { margin-top:14px; font-weight:650; font-size:16px; }
     .post-trials { margin-top:15px; color:var(--muted); font-size:15px; }
+    .ten-progress { margin-top:17px; background:#edf6f3; padding:15px 17px; border:1px solid #c8e0d9; border-radius:11px; }
+    .ten-progress label { display:flex; justify-content:space-between; gap:12px; font-size:15px; font-weight:700; }
+    .ten-progress progress { display:block; width:100%; height:13px; margin:10px 0 8px; accent-color:var(--teal); }
+    .ten-progress p { font-size:14px; margin:0; color:#36574e; }
+    .ten-results-note { color:var(--muted); font-size:16px; margin:0 0 16px; }
     @media (max-width:740px) { .reflection {padding:17px;} .reflection-choice {flex:1;} }
     [hidden] { display:none !important; }
     @media (max-width:740px) {
@@ -261,6 +266,7 @@
         <div><h3>One shuffled deck</h3><p>Each trial starts with a fresh, randomly shuffled deck.</p></div>
         <div class="buttons" aria-label="Simulation controls">
           <button id="one" class="button" type="button">Run the Experiment</button>
+          <button id="ten" class="button secondary" type="button" hidden>Run 10 Shuffles</button>
           <button id="thousand" class="button secondary" type="button" hidden>+1,000</button>
           <button id="hundredThousand" class="button secondary" type="button" hidden>+100,000</button>
           <button id="reset" class="reset" type="button">Reset</button>
@@ -268,6 +274,11 @@
       </div>
       <div class="stage">
         <div class="stage-head"><strong id="deck-title">Your shuffled deck</strong><span id="deck-subtitle">52 cards · all face down</span></div>
+        <div id="ten-progress" class="ten-progress" hidden>
+          <label for="ten-progress-bar"><span>Running 10 shuffles</span><strong id="ten-count">0 / 10</strong></label>
+          <progress id="ten-progress-bar" max="10" value="0">0 of 10 complete</progress>
+          <p id="ten-tally" role="status" aria-live="polite" aria-atomic="true">Results will update after each shuffle.</p>
+        </div>
         <div id="deck" class="deck" role="img" aria-label="52-card deck, awaiting first shuffle"></div>
         <div class="readout" aria-live="polite" aria-atomic="true">
           <div class="readout-item"><span>First ace</span><strong id="first-card">Not revealed</strong></div>
@@ -284,21 +295,22 @@
           <button type="button" class="button secondary reflection-choice" data-reflect="no">No</button>
         </div>
         <div id="reflection-feedback" class="reflection-feedback" role="status" aria-live="polite" hidden></div>
-        <p class="reflection-follow" id="reflection-follow" hidden>One deck is one observation. What happens when we try many?</p>
-        <button id="reflection-run" class="button" type="button" hidden>Run 1,000 shuffles</button>
+        <p class="reflection-follow" id="reflection-follow" hidden>One deck is one observation. Let's try 10 more shuffles and see what changes.</p>
+        <button id="reflection-run" class="button" type="button" hidden>Run 10 Shuffles</button>
       </div>
     </div>
   </section>
   <section class="wrap section" id="results-section" aria-labelledby="results-title" hidden>
-    <div class="section-head"><span class="section-num">02 / EVIDENCE</span><h2 id="results-title">What do the shuffles say?</h2></div>
+    <div class="section-head"><span class="section-num">02 / EVIDENCE</span><h2 id="results-title" tabindex="-1">What do the shuffles say?</h2></div>
+    <p class="ten-results-note">One shuffle tells us very little. Even 10 more is a small sample, especially for outcomes that happen rarely. What do you notice so far?</p>
     <div class="lab">
       <div class="results">
         <div class="countbox"><div class="count" id="total" aria-live="polite">0</div><div class="caption">total decks shuffled</div></div>
         <div>
           <div class="barrow"><div class="barlabel"><strong>Ace of Spades ♠</strong><span class="pct" id="spade-rate">0.000% · 0 decks</span></div><div class="track"><div class="fill" id="spade-fill"></div><div class="target" aria-hidden="true"></div></div></div>
           <div class="barrow"><div class="barlabel"><strong>Two of Clubs ♣</strong><span class="pct" id="club-rate">0.000% · 0 decks</span></div><div class="track"><div class="fill gold" id="club-fill"></div><div class="target" aria-hidden="true"></div></div></div>
-          <div class="axis"><span>0%</span><span class="true">Dashed line: theoretical 1.923%</span><span>4%</span></div>
-          <p class="outcome-note" id="outcome-note">Run a few shuffles to start collecting evidence. Bars use a magnified 0–4% scale and are capped at 4%.</p>
+          <div class="axis"><span>0%</span><span class="true">Dashed line: theoretical 1.923%</span><span id="axis-end">4%</span></div>
+          <p class="outcome-note" id="outcome-note">Run a few shuffles to start collecting evidence. The bar scale changes as you collect more data.</p>
         </div>
       </div>
       <div class="twist">
@@ -550,9 +562,9 @@
   const nfmt = new Intl.NumberFormat('en-CA');
   const el = id => document.getElementById(id);
   const state = { total: 0, spade: 0, club: 0, other: 0, clubBefore: 0, spadeFirst: 0, last: null, busy: false };
-  const journey = {reflected: false, ranBatch: false};
+  const journey = {reflected: false, tenComplete: false, ranBatch: false};
   let reflectionAnswer = null;
-  const controls = [el('one'), el('thousand'), el('hundredThousand'), el('reset')];
+  const controls = [el('one'), el('ten'), el('thousand'), el('hundredThousand'), el('reset')];
 
   function shuffleDeck() {
     const a = MASTER.slice();
@@ -633,17 +645,22 @@
   }
   function percent(count) { return state.total ? 100 * count / state.total : 0; }
   function renderResults() {
+    const scale = state.total < 100 ? 20 : 4;
+    el('axis-end').textContent = scale + '%';
+    document.querySelectorAll('.target').forEach(target => {
+      target.style.left = (100 / 52 / scale * 100) + '%';
+    });
     el('total').textContent = nfmt.format(state.total);
     for (const [key, id] of [['spade','spade'],['club','club']]) {
       const p = percent(state[key]);
       el(id+'-rate').textContent = `${p.toFixed(3)}% · ${nfmt.format(state[key])} ${state[key] === 1 ? 'deck' : 'decks'}`;
-      el(id+'-fill').style.width = `${Math.max(0, Math.min(100, p / 4 * 100))}%`;
+      el(id+'-fill').style.width = `${Math.max(0, Math.min(100, p / scale * 100))}%`;
     }
     el('club-before').textContent = state.total ? `Observed: ${nfmt.format(state.clubBefore)} / ${nfmt.format(state.total)} (${percent(state.clubBefore).toFixed(2)}%)` : 'Observed: no shuffles yet';
     el('spade-first').textContent = state.total ? `Observed: ${nfmt.format(state.spadeFirst)} / ${nfmt.format(state.total)} (${percent(state.spadeFirst).toFixed(2)}%)` : 'Observed: no shuffles yet';
     el('outcome-note').textContent = !state.total
-      ? 'Run a few shuffles to start collecting evidence. Bars use a magnified 0–4% scale and are capped at 4%.'
-      : `The next card was neither target in ${nfmt.format(state.other)} of ${nfmt.format(state.total)} shuffles. Bars use a magnified 0–4% scale and are capped at 4%.`;
+      ? 'Run a few shuffles to start collecting evidence.'
+      : `The next card was neither target in ${nfmt.format(state.other)} of ${nfmt.format(state.total)} shuffles. Bars show a 0–${scale}% scale and are capped at ${scale}%.`;
   }
   function reflectionFor(e) {
     if (e.clubBefore) return {
@@ -696,10 +713,8 @@
     el('reflection-follow').hidden = false;
     el('reflection-run').hidden = false;
     journey.reflected = true;
-    el('thousand').hidden = false;
-    el('hundredThousand').hidden = false;
-    el('results-section').hidden = false;
-    el('experiment-hint').textContent = 'Now test the pattern with more shuffles. The results below will update as you go.';
+    // Keep the evidence section and large batches hidden until the ten animated trials finish.
+    el('experiment-hint').textContent = 'Try 10 more shuffles. Watch each deck and count the outcomes as they occur.';
     el('one').textContent = 'Flip another deck';
   }
   function busy(yes) {
@@ -707,30 +722,81 @@
     controls.forEach(c => c.disabled = yes);
     el('reflection-run').disabled = yes;
   }
+  async function animateDeck(e, millisecondsPerCard) {
+    const stop = e.first + 2;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      renderStage(e, stop);
+      return;
+    }
+    renderStage(e, 0);
+    for (let n = 1; n <= stop; n++) {
+      await new Promise(resolve => setTimeout(resolve, millisecondsPerCard));
+      renderStage(e, n);
+    }
+  }
+  function updateTenProgress(done) {
+    el('ten-count').textContent = done + ' / 10';
+    el('ten-progress-bar').value = done;
+    el('ten-tally').textContent =
+      'All decks so far: ' + nfmt.format(state.total) +
+      '  ·  A♠ next: ' + nfmt.format(state.spade) +
+      '  ·  2♣ next: ' + nfmt.format(state.club) +
+      '  ·  Neither: ' + nfmt.format(state.other);
+  }
+  async function runTen() {
+    if (state.busy || !pollState.predicted || !journey.reflected) return;
+    busy(true);
+    el('reflection').hidden = true;
+    el('ten-progress').hidden = false;
+    updateTenProgress(0);
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    try {
+      for (let trial = 1; trial <= 10; trial++) {
+        const e = evaluate(shuffleDeck());
+        await animateDeck(e, 65);
+        record(e);
+        renderResults();
+        updateTenProgress(trial);
+        el('deck-title').textContent = 'Shuffle ' + trial + ' of 10';
+        if (!reduced && trial < 10) {
+          await new Promise(resolve => setTimeout(resolve, 330));
+        } else if (reduced && trial < 10) {
+          // Reduced motion avoids card-by-card animations, but keeps each result visible.
+          await new Promise(resolve => setTimeout(resolve, 250));
+        }
+      }
+      journey.tenComplete = true;
+      el('results-section').hidden = false;
+      el('ten').hidden = false;
+      el('thousand').hidden = false;
+      el('hundredThousand').hidden = false;
+      el('experiment-hint').textContent = 'You have watched ten more shuffles. Compare the running totals below, or run more trials.';
+    } finally {
+      busy(false);
+    }
+    el('results-title').focus({preventScroll:true});
+    el('results-section').scrollIntoView({
+      behavior: reduced ? 'auto' : 'smooth', block: 'start'
+    });
+  }
   async function flipOne() {
     if (state.busy || !pollState.predicted) return;
     busy(true);
     el('reflection').hidden = true;
+    el('ten-progress').hidden = true;
     const e = evaluate(shuffleDeck());
-    const stop = e.first + 2;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) renderStage(e, stop);
-    else {
-      renderStage(e, 0);
-      for (let n = 1; n <= stop; n++) {
-        await new Promise(resolve => setTimeout(resolve, 65));
-        renderStage(e, n);
-      }
-    }
+    await animateDeck(e, 65);
     record(e);
     renderResults();
     busy(false);
     showReflection(e);
   }
   async function batch(count) {
-    if (state.busy || !pollState.predicted || !journey.reflected) return;
+    if (state.busy || !pollState.predicted || !journey.tenComplete) return;
     busy(true);
     el('reflection').hidden = true;
+    el('ten-progress').hidden = true;
     // Chunk work so the page remains responsive even for 100,000 full-deck shuffles.
     const chunk = 4000;
     let done = 0;
@@ -753,12 +819,16 @@
     for (const key of ['total','spade','club','other','clubBefore','spadeFirst']) state[key] = 0;
     state.last = null;
     journey.reflected = false;
+    journey.tenComplete = false;
     journey.ranBatch = false;
     reflectionAnswer = null;
     el('reflection').hidden = true;
     el('reflection-run').hidden = true;
+    el('ten-progress').hidden = true;
+    updateTenProgress(0);
     el('results-section').hidden = true;
     el('proof-section').hidden = true;
+    el('ten').hidden = true;
     el('thousand').hidden = true;
     el('hundredThousand').hidden = true;
     el('one').textContent = 'Run the Experiment';
@@ -767,12 +837,8 @@
     renderResults();
   }
   document.querySelectorAll('[data-reflect]').forEach(b => b.addEventListener('click', () => answerReflection(b.dataset.reflect)));
-  el('reflection-run').addEventListener('click', () => {
-    batch(1000).then(() => {
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      el('results-section').scrollIntoView({behavior:reduced ? 'auto':'smooth',block:'start'});
-    });
-  });
+  el('reflection-run').addEventListener('click', runTen);
+  el('ten').addEventListener('click', runTen);
   el('one').addEventListener('click', flipOne);
   el('thousand').addEventListener('click', () => batch(1000));
   el('hundredThousand').addEventListener('click', () => batch(100000));
