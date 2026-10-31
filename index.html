@@ -320,7 +320,7 @@
   </section>
   <section class="wrap section" id="results-section" aria-labelledby="results-title" hidden>
     <div class="section-head"><span class="section-num">02 / EVIDENCE</span><h2 id="results-title" tabindex="-1">What do the shuffles say?</h2></div>
-    <p class="ten-results-note">One shuffle tells us very little. Even 10 more is a small sample, especially for outcomes that happen rarely. What do you notice so far?</p>
+    <p class="ten-results-note" id="evidence-intro">One shuffle tells us very little. Even 10 more is a small sample, especially for outcomes that happen rarely. What do you notice so far?</p>
     <div class="results-controls" aria-label="Run more simulated decks">
       <button id="hundred" class="button" type="button">Run 100 Shuffles</button>
       <button id="thousand" class="button secondary" type="button" hidden>Run 1,000 Shuffles</button>
@@ -910,6 +910,7 @@
         if (done < count) await new Promise(resolve => setTimeout(resolve, 70));
       }
       el('bulk-status').textContent = nfmt.format(count) + ' additional decks counted. The results now include ' + nfmt.format(state.total) + ' shuffles.';
+      el('evidence-intro').textContent = 'You have now collected results from ' + nfmt.format(state.total) + ' shuffled decks. Which patterns are becoming clearer? Which differences might still be due to chance?';
       if (count === 100) {
         journey.hundredComplete = true;
         el('thousand').hidden = false;
@@ -944,6 +945,7 @@
     updateTenProgress(0);
     el('bulk-progress').hidden = true;
     el('bulk-progress-bar').value = 0;
+    el('evidence-intro').textContent = 'One shuffle tells us very little. Even 10 more is a small sample, especially for outcomes that happen rarely. What do you notice so far?';
     el('results-section').hidden = true;
     el('proof-section').hidden = true;
     el('ten').hidden = true;
