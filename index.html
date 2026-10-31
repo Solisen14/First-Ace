@@ -141,6 +141,21 @@
     .poll-fill.clubs { background:#c18e50; }
     .poll-fill.equal { background:var(--teal); }
     .poll-fill.unsure { background:#8d969b; }
+
+    /* Guided first shuffle and reflection */
+    .guided-cta { margin-top:14px; }
+    .guided-cta .button { font-size:15px; padding:13px 19px; }
+    .experiment-hint { margin:0 0 18px; padding:13px 16px; border-left:3px solid var(--teal); background:#edf6f3; border-radius:0 9px 9px 0; font-size:14px; color:#33534e; }
+    .reflection { margin-top:22px; border:1px solid #c9dfda; border-radius:13px; padding:22px; background:#f2f8f6; }
+    .reflection-kicker { margin:0 0 7px; font-size:11px; font-weight:800; letter-spacing:.1em; color:var(--teal); text-transform:uppercase; }
+    .reflection h4 { font-size:18px; line-height:1.4; margin:0 0 13px; }
+    .reflection-options { display:flex; gap:9px; flex-wrap:wrap; }
+    .reflection-choice { min-width:116px; }
+    .reflection-feedback { margin:14px 0 0; padding:12px 15px; border-radius:9px; background:white; border:1px solid #d9e7e4; font-size:14px; }
+    .reflection-feedback strong { display:block; margin-bottom:4px; }
+    .reflection-follow { margin-top:14px; font-weight:650; font-size:14px; }
+    .post-trials { margin-top:15px; color:var(--muted); font-size:13px; }
+    @media (max-width:740px) { .reflection {padding:17px;} .reflection-choice {flex:1;} }
     [hidden] { display:none !important; }
     @media (max-width:740px) {
       .poll-card { grid-template-columns:1fr; gap:20px; }
@@ -209,10 +224,15 @@
         </fieldset>
         <div class="poll-action">
           <button class="button" id="poll-submit" type="button" disabled>Save my prediction</button>
+          <button class="button secondary" id="poll-skip" type="button" disabled>Continue without saving</button>
           <button class="reset" id="poll-again" type="button" hidden>Another participant on this device</button>
         </div>
-        <p class="poll-status" id="poll-status" role="status" aria-live="polite">Choose an answer before you start the experiment.</p>
-        <p class="poll-fine">Anonymous pilot: your answer and a random submission token are saved, but not your name or email. You can still try the simulation without voting.</p>
+        <p class="poll-status" id="poll-status" role="status" aria-live="polite">Choose an answer, then save your prediction or continue without saving.</p>
+        <div class="guided-cta" id="poll-next" hidden>
+          <button class="button" type="button" id="poll-to-deck">Flip the deck</button>
+          <p class="poll-fine">One shuffled deck first. Then we'll look at what your result means.</p>
+        </div>
+        <p class="poll-fine">Anonymous pilot: your answer and a random submission token are saved, but not your name or email. If you prefer not to share your answer, choose “Continue without saving”.</p>
       </div>
       <div class="poll-results" id="poll-results" hidden>
         <h3>How others predicted</h3>
@@ -226,16 +246,17 @@
       </div>
     </div>
   </section>
-  <section class="wrap section" aria-labelledby="experiment-title">
+  <section class="wrap section" id="experiment-section" aria-labelledby="experiment-title" hidden>
     <div class="section-head"><span class="section-num">01 / EXPERIMENT</span><h2 id="experiment-title">Shuffle. Reveal. Repeat.</h2></div>
-    <p class="section-sub">Watch one deck unfold, or run thousands of shuffles to see what happens over time.</p>
+    <p class="section-sub">Start with a single deck. What can one shuffle tell us?</p>
     <div class="lab">
+      <p class="experiment-hint" id="experiment-hint">Your prediction is in. Now flip one deck and watch for the first ace.</p>
       <div class="lab-top">
         <div><h3>Try the experiment</h3><p>Each trial starts with a fresh, randomly shuffled deck.</p></div>
         <div class="buttons" aria-label="Simulation controls">
-          <button id="one" class="button" type="button">Flip 1 deck</button>
-          <button id="thousand" class="button secondary" type="button">+1,000</button>
-          <button id="hundredThousand" class="button secondary" type="button">+100,000</button>
+          <button id="one" class="button" type="button">Flip the deck</button>
+          <button id="thousand" class="button secondary" type="button" hidden>+1,000</button>
+          <button id="hundredThousand" class="button secondary" type="button" hidden>+100,000</button>
           <button id="reset" class="reset" type="button">Reset</button>
         </div>
       </div>
@@ -249,9 +270,19 @@
         </div>
         <div class="note" id="stage-note">The gold outline marks the first ace. Teal marks the very next card.</div>
       </div>
+      <div id="reflection" class="reflection" hidden aria-labelledby="reflection-title">
+        <p class="reflection-kicker">Think about this shuffle</p>
+        <h4 id="reflection-title" tabindex="-1"></h4>
+        <div class="reflection-options" id="reflection-options" role="group" aria-label="Answer the reflection question">
+          <button type="button" class="button secondary reflection-choice" data-reflect="yes">Yes</button>
+          <button type="button" class="button secondary reflection-choice" data-reflect="no">No</button>
+        </div>
+        <div id="reflection-feedback" class="reflection-feedback" role="status" aria-live="polite" hidden></div>
+        <p class="reflection-follow" id="reflection-follow" hidden>One deck is one observation. Try more shuffles to investigate the pattern.</p>
+      </div>
     </div>
   </section>
-  <section class="wrap section" aria-labelledby="results-title">
+  <section class="wrap section" id="results-section" aria-labelledby="results-title" hidden>
     <div class="section-head"><span class="section-num">02 / EVIDENCE</span><h2 id="results-title">What do the shuffles say?</h2></div>
     <div class="lab">
       <div class="results">
@@ -269,7 +300,7 @@
       </div>
     </div>
   </section>
-  <section class="wrap section proof" aria-labelledby="proof-title">
+  <section class="wrap section proof" id="proof-section" aria-labelledby="proof-title" hidden>
     <div class="section-head"><span class="section-num">03 / THE REVEAL</span><h2 id="proof-title">Why is it a tie?</h2></div>
     <p class="proof-lead">The two cards are eliminated in different ways, but there's a surprisingly simple argument that works for <em>either</em> one.</p>
     <div class="proof-steps">
