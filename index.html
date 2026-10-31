@@ -164,6 +164,26 @@
     .ten-progress progress { display:block; width:100%; height:13px; margin:10px 0 8px; accent-color:var(--teal); }
     .ten-progress p { font-size:14px; margin:0; color:#36574e; }
     .ten-results-note { color:var(--muted); font-size:16px; margin:0 0 16px; }
+    .results-controls { display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin:16px 0 20px; }
+    .results-controls .button { min-width:170px; }
+    .bulk-progress { margin:0 0 20px; padding:15px 17px; border:1px solid #c8e0d9; background:#edf6f3; border-radius:11px; }
+    .bulk-progress label { display:flex; gap:12px; justify-content:space-between; font-size:15px; font-weight:700; }
+    .bulk-progress progress { width:100%; height:13px; margin:10px 0 8px; accent-color:var(--teal); }
+    .bulk-progress p { font-size:14px; color:#36574e; margin:0; }
+    .extra-data { border-top:1px solid var(--edge); margin-top:25px; padding-top:24px; }
+    .extra-data h3 { margin:0 0 7px; font:700 25px/1.25 var(--serif); }
+    .extra-data .intro { margin:0 0 17px; font-size:16px; color:var(--muted); }
+    .extra-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .extra-card { background:#f8f9f7; border:1px solid #e5e7e4; border-radius:12px; padding:18px; }
+    .extra-card h4 { font-size:17px; line-height:1.4; margin:0 0 10px; }
+    .extra-card p { font-size:15px; color:var(--muted); margin:9px 0 0; }
+    .extra-number { font:700 34px/1.15 var(--serif); color:var(--ink); font-variant-numeric:tabular-nums; }
+    .ace-row { margin:10px 0; }
+    .ace-label { display:flex; gap:10px; justify-content:space-between; font-size:15px; margin:0 0 5px; }
+    .ace-label strong { font-variant-numeric:tabular-nums; }
+    .ace-bar { height:11px; border-radius:10px; overflow:hidden; background:#e2e9e6; }
+    .ace-fill { height:100%; background:var(--teal); width:0; transition:width .2s; }
+    @media (max-width:740px) { .extra-grid {grid-template-columns:1fr;} .results-controls .button {flex:1;} }
     @media (max-width:740px) { .reflection {padding:17px;} .reflection-choice {flex:1;} }
     [hidden] { display:none !important; }
     @media (max-width:740px) {
@@ -267,8 +287,6 @@
         <div class="buttons" aria-label="Simulation controls">
           <button id="one" class="button" type="button">Run the Experiment</button>
           <button id="ten" class="button secondary" type="button" hidden>Run 10 Shuffles</button>
-          <button id="thousand" class="button secondary" type="button" hidden>+1,000</button>
-          <button id="hundredThousand" class="button secondary" type="button" hidden>+100,000</button>
           <button id="reset" class="reset" type="button">Reset</button>
         </div>
       </div>
@@ -303,6 +321,16 @@
   <section class="wrap section" id="results-section" aria-labelledby="results-title" hidden>
     <div class="section-head"><span class="section-num">02 / EVIDENCE</span><h2 id="results-title" tabindex="-1">What do the shuffles say?</h2></div>
     <p class="ten-results-note">One shuffle tells us very little. Even 10 more is a small sample, especially for outcomes that happen rarely. What do you notice so far?</p>
+    <div class="results-controls" aria-label="Run more simulated decks">
+      <button id="hundred" class="button" type="button">Run 100 Shuffles</button>
+      <button id="thousand" class="button secondary" type="button" hidden>Run 1,000 Shuffles</button>
+      <button id="hundredThousand" class="button secondary" type="button" hidden>Run 100,000 Shuffles</button>
+    </div>
+    <div id="bulk-progress" class="bulk-progress" hidden>
+      <label for="bulk-progress-bar"><span id="bulk-title">Running shuffles</span><strong id="bulk-count">0 / 100</strong></label>
+      <progress id="bulk-progress-bar" max="100" value="0"></progress>
+      <p id="bulk-status">The bars and statistics update as each batch finishes.</p>
+    </div>
     <div class="lab">
       <div class="results">
         <div class="countbox"><div class="count" id="total" aria-live="polite">0</div><div class="caption">total decks shuffled</div></div>
@@ -311,6 +339,36 @@
           <div class="barrow"><div class="barlabel"><strong>Two of Clubs ♣</strong><span class="pct" id="club-rate">0.000% · 0 decks</span></div><div class="track"><div class="fill gold" id="club-fill"></div><div class="target" aria-hidden="true"></div></div></div>
           <div class="axis"><span>0%</span><span class="true">Dashed line: theoretical 1.923%</span><span id="axis-end">4%</span></div>
           <p class="outcome-note" id="outcome-note">Run a few shuffles to start collecting evidence. The bar scale changes as you collect more data.</p>
+        </div>
+      </div>
+      <div class="extra-data" aria-labelledby="extra-title">
+        <h3 id="extra-title">What else can we notice?</h3>
+        <p class="intro">These statistics use every shuffled deck, including the first experiment. They update whenever you run more trials.</p>
+        <div class="extra-grid">
+          <div class="extra-card">
+            <h4>Which ace came first?</h4>
+            <div class="ace-row"><div class="ace-label"><span>A♠ Spades</span><strong id="first-spades">0 (0%)</strong></div><div class="ace-bar"><div class="ace-fill" id="first-fill-spades"></div></div></div>
+            <div class="ace-row"><div class="ace-label"><span>A♥ Hearts</span><strong id="first-hearts">0 (0%)</strong></div><div class="ace-bar"><div class="ace-fill" id="first-fill-hearts"></div></div></div>
+            <div class="ace-row"><div class="ace-label"><span>A♦ Diamonds</span><strong id="first-diamonds">0 (0%)</strong></div><div class="ace-bar"><div class="ace-fill" id="first-fill-diamonds"></div></div></div>
+            <div class="ace-row"><div class="ace-label"><span>A♣ Clubs</span><strong id="first-clubs">0 (0%)</strong></div><div class="ace-bar"><div class="ace-fill" id="first-fill-clubs"></div></div></div>
+            <p>Each ace has a theoretical 25% chance of being first.</p>
+          </div>
+          <div class="extra-card">
+            <h4>Did the 2♣ appear before every ace?</h4>
+            <div class="extra-number" id="early-club-rate">—</div>
+            <p id="early-club-count">0 of 0 shuffled decks</p>
+            <p>The theoretical probability is 20%.</p>
+          </div>
+          <div class="extra-card">
+            <h4>Average number of cards before the first ace</h4>
+            <div class="extra-number" id="mean-before-ace">—</div>
+            <p>Count the non-ace cards turned over <strong>before</strong> the first ace, not including that ace. The theoretical average is 9.6 cards.</p>
+          </div>
+          <div class="extra-card">
+            <h4>Longest run without an ace</h4>
+            <div class="extra-number" id="longest-ace-free">—</div>
+            <p>Most consecutive non-aces found anywhere in one complete 52-card shuffled deck. This includes cards that were not turned over on screen.</p>
+          </div>
         </div>
       </div>
       <div class="twist">
@@ -561,10 +619,15 @@
   const CLUB_ID = '♣2';
   const nfmt = new Intl.NumberFormat('en-CA');
   const el = id => document.getElementById(id);
-  const state = { total: 0, spade: 0, club: 0, other: 0, clubBefore: 0, spadeFirst: 0, last: null, busy: false };
-  const journey = {reflected: false, tenComplete: false, ranBatch: false};
+  const state = {
+    total: 0, spade: 0, club: 0, other: 0, clubBefore: 0, spadeFirst: 0,
+    firstAceBySuit: {'♠':0, '♥':0, '♦':0, '♣':0},
+    sumBeforeFirst: 0, longestAceFree: 0,
+    last: null, busy: false
+  };
+  const journey = {reflected: false, tenComplete: false, hundredComplete: false, thousandComplete: false, ranBatch: false};
   let reflectionAnswer = null;
-  const controls = [el('one'), el('ten'), el('thousand'), el('hundredThousand'), el('reset')];
+  const controls = [el('one'), el('ten'), el('hundred'), el('thousand'), el('hundredThousand'), el('reset')];
 
   function shuffleDeck() {
     const a = MASTER.slice();
@@ -576,21 +639,34 @@
     return a;
   }
   function evaluate(deck) {
-    let first = -1, clubPosition = -1;
+    let first = -1, clubPosition = -1, aceFree = 0, longestAceFree = 0;
     for (let i = 0; i < deck.length; i++) {
       if (deck[i].id === CLUB_ID) clubPosition = i;
-      if (first < 0 && deck[i].rank === 1) first = i;
+      if (deck[i].rank === 1) {
+        if (first < 0) first = i;
+        aceFree = 0;
+      } else {
+        aceFree++;
+        if (aceFree > longestAceFree) longestAceFree = aceFree;
+      }
     }
     // The first ace is guaranteed to have a next card: four aces must fit in the deck.
     const next = deck[first + 1];
     const result = next.id === SPADE_ID ? 'spade' : next.id === CLUB_ID ? 'club' : 'other';
-    return { first, next, result, clubBefore: clubPosition < first, spadeFirst: deck[first].id === SPADE_ID, deck };
+    return {
+      first, next, result, clubBefore: clubPosition < first,
+      spadeFirst: deck[first].id === SPADE_ID,
+      firstSuit: deck[first].suit.symbol, longestAceFree, deck
+    };
   }
   function record(e) {
     state.total++;
     state[e.result]++;
     if (e.clubBefore) state.clubBefore++;
     if (e.spadeFirst) state.spadeFirst++;
+    state.firstAceBySuit[e.firstSuit]++;
+    state.sumBeforeFirst += e.first;
+    state.longestAceFree = Math.max(state.longestAceFree, e.longestAceFree);
     state.last = e;
   }
   function label(card) {
@@ -658,6 +734,16 @@
     }
     el('club-before').textContent = state.total ? `Observed: ${nfmt.format(state.clubBefore)} / ${nfmt.format(state.total)} (${percent(state.clubBefore).toFixed(2)}%)` : 'Observed: no shuffles yet';
     el('spade-first').textContent = state.total ? `Observed: ${nfmt.format(state.spadeFirst)} / ${nfmt.format(state.total)} (${percent(state.spadeFirst).toFixed(2)}%)` : 'Observed: no shuffles yet';
+    for (const [symbol, name] of [['♠','spades'], ['♥','hearts'], ['♦','diamonds'], ['♣','clubs']]) {
+      const count = state.firstAceBySuit[symbol];
+      const p = percent(count);
+      el('first-' + name).textContent = nfmt.format(count) + ' (' + p.toFixed(1) + '%)';
+      el('first-fill-' + name).style.width = p + '%';
+    }
+    el('early-club-rate').textContent = state.total ? percent(state.clubBefore).toFixed(1) + '%' : '—';
+    el('early-club-count').textContent = nfmt.format(state.clubBefore) + ' of ' + nfmt.format(state.total) + ' shuffled decks';
+    el('mean-before-ace').textContent = state.total ? (state.sumBeforeFirst / state.total).toFixed(2) : '—';
+    el('longest-ace-free').textContent = state.total ? nfmt.format(state.longestAceFree) + ' cards' : '—';
     el('outcome-note').textContent = !state.total
       ? 'Run a few shuffles to start collecting evidence.'
       : `The next card was neither target in ${nfmt.format(state.other)} of ${nfmt.format(state.total)} shuffles. Bars show a 0–${scale}% scale and are capped at ${scale}%.`;
@@ -773,8 +859,7 @@
       journey.tenComplete = true;
       el('results-section').hidden = false;
       el('ten').hidden = false;
-      el('thousand').hidden = false;
-      el('hundredThousand').hidden = false;
+      // The next stage is a non-animated batch of 100, offered in the results section.
       el('experiment-hint').textContent = 'You have watched ten more shuffles. Compare the running totals below, or run more trials.';
     } finally {
       busy(false);
@@ -797,39 +882,68 @@
     showReflection(e);
   }
   async function batch(count) {
-    if (state.busy || !pollState.predicted || !journey.tenComplete) return;
+    const allowed = count === 100 ? journey.tenComplete
+      : count === 1000 ? journey.hundredComplete
+      : count === 100000 ? journey.thousandComplete : false;
+    if (state.busy || !pollState.predicted || !allowed) return;
     busy(true);
     el('reflection').hidden = true;
     el('ten-progress').hidden = true;
-    // Chunk work so the page remains responsive even for 100,000 full-deck shuffles.
-    const chunk = 4000;
+    el('bulk-progress').hidden = false;
+    el('bulk-title').textContent = 'Running ' + nfmt.format(count) + ' shuffles';
+    el('bulk-progress-bar').max = count;
+    el('bulk-progress-bar').value = 0;
+    el('bulk-count').textContent = '0 / ' + nfmt.format(count);
+    el('bulk-status').textContent = 'The cards above stay unchanged; the bars and statistics update live.';
+    // The same batch engine handles 100, 1,000, and 100,000, without card flips.
+    // Roughly 25 updates make the smaller batch visibly progressive.
+    const chunk = count === 100 ? 4 : count === 1000 ? 40 : 4000;
     let done = 0;
-    while (done < count) {
-      for (let i = 0, end = Math.min(chunk,count-done); i < end; i++) record(evaluate(shuffleDeck()));
-      done += Math.min(chunk, count-done);
-      renderResults();
-      el('deck-subtitle').textContent = `Running ${nfmt.format(done)} of ${nfmt.format(count)} new shuffles…`;
-      if (done < count) await new Promise(resolve => requestAnimationFrame(resolve));
+    try {
+      while (done < count) {
+        const take = Math.min(chunk, count - done);
+        for (let i = 0; i < take; i++) record(evaluate(shuffleDeck()));
+        done += take;
+        renderResults();
+        el('bulk-progress-bar').value = done;
+        el('bulk-count').textContent = nfmt.format(done) + ' / ' + nfmt.format(count);
+        if (done < count) await new Promise(resolve => setTimeout(resolve, 70));
+      }
+      el('bulk-status').textContent = nfmt.format(count) + ' additional decks counted. The results now include ' + nfmt.format(state.total) + ' shuffles.';
+      if (count === 100) {
+        journey.hundredComplete = true;
+        el('thousand').hidden = false;
+      } else if (count === 1000) {
+        journey.thousandComplete = true;
+        el('hundredThousand').hidden = false;
+      }
+      if (count >= 1000) {
+        journey.ranBatch = true;
+        el('proof-section').hidden = false;
+      }
+    } finally {
+      busy(false);
     }
-    renderStage(state.last, state.last.first + 2);
-    renderResults();
-    journey.ranBatch = true;
-    el('proof-section').hidden = false;
-    el('experiment-hint').textContent = 'Compare the observed percentages with 1.923%. Why do they move closer as the number of shuffles increases?';
-    busy(false);
   }
   function reset() {
     if (state.busy) return;
     for (const key of ['total','spade','club','other','clubBefore','spadeFirst']) state[key] = 0;
     state.last = null;
+    for (const suit of ['♠','♥','♦','♣']) state.firstAceBySuit[suit] = 0;
+    state.sumBeforeFirst = 0;
+    state.longestAceFree = 0;
     journey.reflected = false;
     journey.tenComplete = false;
+    journey.hundredComplete = false;
+    journey.thousandComplete = false;
     journey.ranBatch = false;
     reflectionAnswer = null;
     el('reflection').hidden = true;
     el('reflection-run').hidden = true;
     el('ten-progress').hidden = true;
     updateTenProgress(0);
+    el('bulk-progress').hidden = true;
+    el('bulk-progress-bar').value = 0;
     el('results-section').hidden = true;
     el('proof-section').hidden = true;
     el('ten').hidden = true;
@@ -844,6 +958,7 @@
   el('reflection-run').addEventListener('click', runTen);
   el('ten').addEventListener('click', runTen);
   el('one').addEventListener('click', flipOne);
+  el('hundred').addEventListener('click', () => batch(100));
   el('thousand').addEventListener('click', () => batch(1000));
   el('hundredThousand').addEventListener('click', () => batch(100000));
   el('reset').addEventListener('click', reset);
