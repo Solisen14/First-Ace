@@ -164,8 +164,24 @@
     .ten-progress progress { display:block; width:100%; height:13px; margin:10px 0 8px; accent-color:var(--teal); }
     .ten-progress p { font-size:14px; margin:0; color:#36574e; }
     .ten-results-note { color:var(--muted); font-size:16px; margin:0 0 16px; }
-    .results-controls { display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin:16px 0 20px; }
-    .results-controls .button { min-width:170px; }
+    .results-controls { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:16px 0 22px; padding:20px 22px; border:2px solid #bedbd2; background:#eef7f3; border-radius:14px; }
+    .results-controls .button { min-width:220px; font-size:17px; padding:14px 20px; box-shadow:0 4px 0 #102e2a; }
+    .results-controls .button:hover {transform:translateY(-2px);}
+    .results-controls .button:disabled {box-shadow:none;}
+    .next-step-heading {flex:1; min-width:210px;}
+    .next-step-heading .eyebrow {display:block; color:#176c60; font-size:12px; letter-spacing:.09em; font-weight:800; text-transform:uppercase; margin-bottom:5px;}
+    .next-step-heading strong {display:block; font-size:19px; line-height:1.3;}
+    .next-step-panel {margin:26px 0 8px; border:2px solid #bedbd2; border-radius:15px; background:#eef7f3; padding:24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px;}
+    .next-step-panel .copy {flex:1; min-width:210px;}
+    .next-step-panel .eyebrow {color:#176c60; text-transform:uppercase; letter-spacing:.1em; font-size:12px; font-weight:800; margin:0 0 7px;}
+    .next-step-panel h3 {font:700 clamp(22px,2.5vw,27px)/1.3 var(--serif); margin:0 0 7px;}
+    .next-step-panel p {font-size:15px; color:#435d55; line-height:1.45; margin:0;}
+    .next-step-panel .button {font-size:18px; padding:15px 24px; min-height:55px; box-shadow:0 4px 0 #102e2a;}
+    .next-step-panel .button:disabled {box-shadow:none;}
+    @media (max-width:740px) {
+      .results-controls,.next-step-panel {padding:17px; flex-direction:column; align-items:stretch;}
+      .results-controls .button,.next-step-panel .button {width:100%;}
+    }
     .bulk-progress { margin:0 0 20px; padding:15px 17px; border:1px solid #c8e0d9; background:#edf6f3; border-radius:11px; }
     .bulk-progress label { display:flex; gap:12px; justify-content:space-between; font-size:15px; font-weight:700; }
     .bulk-progress progress { width:100%; height:13px; margin:10px 0 8px; accent-color:var(--teal); }
@@ -408,9 +424,10 @@
   <section class="wrap section" id="results-section" aria-labelledby="results-title" hidden>
     <div class="section-head"><span class="section-num">02 / EVIDENCE</span><h2 id="results-title" tabindex="-1">What do the shuffles say?</h2></div>
     <p class="ten-results-note" id="evidence-intro">One shuffle tells us very little. Even 10 more is a small sample, especially for outcomes that happen rarely. What do you notice so far?</p>
-    <div class="results-controls" aria-label="Run more simulated decks">
+    <div id="results-controls" class="results-controls" aria-label="Next simulation">
+      <div class="next-step-heading"><span class="eyebrow">Next step</span><strong id="results-next-heading">More shuffles, more evidence</strong></div>
       <button id="hundred" class="button" type="button">Run 100 Shuffles</button>
-      <button id="thousand" class="button secondary" type="button" hidden>Run 1,000 Shuffles</button>
+      <button id="thousand" class="button" type="button" hidden>Run 1,000 Shuffles</button>
     </div>
     <div id="bulk-progress" class="bulk-progress" hidden>
       <label for="bulk-progress-bar"><span id="bulk-title">Running shuffles</span><strong id="bulk-count">0 / 100</strong></label>
@@ -466,6 +483,14 @@
         <div class="twist-box"><h4>What if the 2♣ appeared earlier?</h4><div class="fraction">1 in 5 <span style="font:500 14px var(--sans);color:var(--muted)">= 20%</span></div><p>The Two of Clubs comes before all four aces in 20% of shuffles.</p><div class="empirical" id="club-before">Observed: no shuffles yet</div></div>
         <div class="twist-box"><h4>What if the A♠ is the first ace?</h4><div class="fraction">1 in 4 <span style="font:500 14px var(--sans);color:var(--muted)">= 25%</span></div><p>The Ace of Spades itself is the first ace in 25% of shuffles.</p><div class="empirical" id="spade-first">Observed: no shuffles yet</div></div>
       </div>
+    </div>
+    <div id="results-bottom-next" class="next-step-panel" hidden>
+      <div class="copy">
+        <p class="eyebrow">Keep investigating</p>
+        <h3 id="bottom-next-heading">Ready for more evidence?</h3>
+        <p id="bottom-next-description">Run another sample to see how the experimental probabilities change.</p>
+      </div>
+      <button id="bottom-next-button" class="button" type="button">Run 100 Shuffles</button>
     </div>
   </section>
 
@@ -850,7 +875,7 @@
   let storySnapshot = null;
   let storyActiveStep = -1;
   let reflectionAnswer = null;
-  const controls = [el('one'), el('ten'), el('hundred'), el('thousand'), el('hundredThousand'), el('reset')];
+  const controls = [el('one'), el('ten'), el('hundred'), el('thousand'), el('hundredThousand'), el('bottom-next-button'), el('reset')];
 
   function shuffleDeck() {
     const a = MASTER.slice();
@@ -1283,6 +1308,45 @@
       '  ·  2♣ next: ' + nfmt.format(state.club) +
       '  ·  Neither: ' + nfmt.format(state.other);
   }
+  function updateEvidenceActions() {
+    const next = el('results-bottom-next');
+    const top = el('results-controls');
+    const bottom = el('bottom-next-button');
+    if (!journey.tenComplete || journey.largeComplete) {
+      next.hidden = true;
+      top.hidden = true;
+      return;
+    }
+    next.hidden = false;
+    if (!journey.hundredComplete) {
+      top.hidden = false;
+      el('hundred').hidden = false;
+      el('thousand').hidden = true;
+      el('results-next-heading').textContent = 'What happens with 100 more decks?';
+      el('bottom-next-heading').textContent = 'Ready for a larger sample?';
+      el('bottom-next-description').textContent = 'Try 100 additional shuffles. The bars and statistics update as the results arrive.';
+      bottom.textContent = 'Run 100 Shuffles';
+    } else if (!journey.thousandComplete) {
+      top.hidden = false;
+      el('hundred').hidden = true;
+      el('thousand').hidden = false;
+      el('results-next-heading').textContent = 'Now try 1,000 more decks';
+      el('bottom-next-heading').textContent = 'What changes with 1,000 more shuffles?';
+      el('bottom-next-description').textContent = 'Watch the running percentages change with a larger sample.';
+      bottom.textContent = 'Run 1,000 Shuffles';
+    } else {
+      top.hidden = true;
+      el('bottom-next-heading').textContent = 'Your data has a story';
+      el('bottom-next-description').textContent = 'Scroll through the analysis and respond to questions based on your results.';
+      bottom.textContent = 'Explore the data analysis ↓';
+    }
+  }
+  function runNextEvidenceStage() {
+    if (state.busy || !journey.tenComplete) return;
+    if (!journey.hundredComplete) batch(100);
+    else if (!journey.thousandComplete) batch(1000);
+    else if (!journey.largeComplete) goToStory();
+  }
   async function runTen() {
     if (state.busy || !pollState.predicted || !journey.reflected) return;
     busy(true);
@@ -1308,6 +1372,7 @@
       journey.tenComplete = true;
       el('results-section').hidden = false;
       el('ten').hidden = false;
+      updateEvidenceActions();
       // The next stage is a non-animated batch of 100, offered in the results section.
       el('experiment-hint').textContent = 'You have watched ten more shuffles. Compare the running totals below, or run more trials.';
     } finally {
@@ -1331,9 +1396,9 @@
     showReflection(e);
   }
   async function batch(count) {
-    const allowed = count === 100 ? journey.tenComplete
-      : count === 1000 ? journey.hundredComplete
-      : count === 100000 ? journey.thousandComplete : false;
+    const allowed = count === 100 ? journey.tenComplete && !journey.hundredComplete
+      : count === 1000 ? journey.hundredComplete && !journey.thousandComplete
+      : count === 100000 ? journey.thousandComplete && !journey.largeComplete : false;
     if (state.busy || !pollState.predicted || !allowed) return;
     busy(true);
     el('reflection').hidden = true;
@@ -1398,6 +1463,7 @@
           ' shuffled decks recorded. The theoretical comparisons are now unlocked below.';
         el('evidence-intro').textContent = 'Now compare your experimental results with the theoretical probabilities. How closely do they agree?';
       }
+      updateEvidenceActions();
     } finally {
       busy(false);
     }
@@ -1436,6 +1502,7 @@
     el('evidence-intro').textContent = 'One shuffle tells us very little. Even 10 more is a small sample, especially for outcomes that happen rarely. What do you notice so far?';
     el('results-section').hidden = true;
     el('story-section').hidden = true;
+    updateEvidenceActions();
     el('hundred').hidden = false;
     el('story-next-note').textContent = 'This runs real randomized decks without animating individual cards. The theoretical comparisons are revealed afterward.';
     revealTheory(false);
@@ -1453,6 +1520,7 @@
   el('one').addEventListener('click', flipOne);
   el('hundred').addEventListener('click', () => batch(100));
   el('thousand').addEventListener('click', () => batch(1000));
+  el('bottom-next-button').addEventListener('click', runNextEvidenceStage);
   el('hundredThousand').addEventListener('click', async () => {
     if (state.busy || !pollState.predicted || !journey.thousandComplete) return;
     prepareLiveResults();
@@ -1473,6 +1541,7 @@
   el('reset').addEventListener('click', reset);
   renderStage(null,0);
   renderResults();
+  updateEvidenceActions();
   revealTheory(false);
   initStoryScroll();
   initPoll();
