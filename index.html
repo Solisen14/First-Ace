@@ -143,8 +143,12 @@
     .poll-fill.unsure { background:#8d969b; }
 
     /* Guided first shuffle and reflection */
-    .guided-cta { margin-top:14px; }
-    .guided-cta .button { font-size:17px; padding:13px 19px; }
+    .probability-intro { background:#eef7f4; border:1px solid #c5e1d8; border-radius:14px; padding:22px 24px; margin:0 0 25px; }
+    .probability-intro h3 { margin:0 0 10px; font-size:21px; }
+    .probability-intro p { margin:0 0 10px; font-size:17px; color:#354c4a; }
+    .probability-formula { display:block; padding:12px 14px; margin:12px 0; border:1px solid #d1e4df; background:#fff; border-radius:10px; font-size:16px; font-weight:700; line-height:1.5; }
+    .probability-intro .example { margin-bottom:0; font-size:15px; }
+    @media (max-width:740px) { .probability-intro {padding:17px;} .probability-intro p {font-size:16px;} .probability-formula {font-size:15px;} }
     .experiment-hint { margin:0 0 18px; padding:13px 16px; border-left:3px solid var(--teal); background:#edf6f3; border-radius:0 9px 9px 0; font-size:16px; color:#33534e; }
     .reflection { margin-top:22px; border:1px solid #c9dfda; border-radius:13px; padding:22px; background:#f2f8f6; }
     .reflection-kicker { margin:0 0 7px; font-size:13px; font-weight:800; letter-spacing:.1em; color:var(--teal); text-transform:uppercase; }
@@ -228,10 +232,6 @@
           <button class="reset" id="poll-again" type="button" hidden>Another participant on this device</button>
         </div>
         <p class="poll-status" id="poll-status" role="status" aria-live="polite">Choose an answer, then save your prediction or continue without saving.</p>
-        <div class="guided-cta" id="poll-next" hidden>
-          <button class="button" type="button" id="poll-to-deck">Flip the Deck</button>
-          <p class="poll-fine">One shuffled deck first. Then we'll look at what your result means.</p>
-        </div>
         <p class="poll-fine">Anonymous pilot: your answer and a random submission token are saved, but not your name or email. If you prefer not to share your answer, choose “Continue without saving”.</p>
       </div>
       <div class="poll-results" id="poll-results" hidden>
@@ -247,14 +247,20 @@
     </div>
   </section>
   <section class="wrap section" id="experiment-section" aria-labelledby="experiment-title" hidden>
-    <div class="section-head"><span class="section-num">01 / EXPERIMENT</span><h2 id="experiment-title">Shuffle. Reveal. Repeat.</h2></div>
-    <p class="section-sub">Start with a single deck. What can one shuffle tell us?</p>
+    <div class="section-head"><span class="section-num">01 / EXPERIMENT</span><h2 id="experiment-title" tabindex="-1">Let's test what you think</h2></div>
+    <div class="probability-intro" aria-labelledby="experimental-probability-title">
+      <h3 id="experimental-probability-title">What is experimental probability?</h3>
+      <p><strong>Experimental probability</strong> is an estimate of how likely something is to happen, based on the results of an experiment. We find it by repeating the experiment, counting how often an event happens, and comparing that count to the total number of trials.</p>
+      <div class="probability-formula">Experimental probability = number of times the event happens ÷ total number of trials</div>
+      <p class="example">For example, if the Two of Clubs follows the first ace in 3 out of 100 shuffled decks, its experimental probability is 3 ÷ 100 = 3%. That is an estimate based on those 100 trials.</p>
+    </div>
+    <p class="section-sub">We'll start with just one shuffled deck. What will we observe?</p>
     <div class="lab">
-      <p class="experiment-hint" id="experiment-hint">Your prediction is in. Now flip one deck and watch for the first ace.</p>
+      <p class="experiment-hint" id="experiment-hint">Turn over cards until the first ace appears, then look at the very next card.</p>
       <div class="lab-top">
-        <div><h3>Try the experiment</h3><p>Each trial starts with a fresh, randomly shuffled deck.</p></div>
+        <div><h3>One shuffled deck</h3><p>Each trial starts with a fresh, randomly shuffled deck.</p></div>
         <div class="buttons" aria-label="Simulation controls">
-          <button id="one" class="button" type="button">Flip the Deck</button>
+          <button id="one" class="button" type="button">Run the Experiment</button>
           <button id="thousand" class="button secondary" type="button" hidden>+1,000</button>
           <button id="hundredThousand" class="button secondary" type="button" hidden>+100,000</button>
           <button id="reset" class="reset" type="button">Reset</button>
@@ -391,22 +397,35 @@
     }
     pollEl('poll-results').hidden = false;
   }
-  function predictionReady(saved) {
+  function predictionReady(saved, autoScroll = true) {
     pollState.predicted = true;
-    pollEl('poll-next').hidden = false;
     pollEl('poll-submit').hidden = true;
     pollEl('poll-skip').hidden = true;
     pollEl('poll-again').hidden = false;
     pollEl('experiment-section').hidden = false;
     pollRadios().forEach(r => { r.disabled = true; });
+    const selected = pollRadios().find(r => r.checked);
+    const unsure = selected && selected.value === 'not_sure';
+    pollEl('experiment-title').textContent = unsure
+      ? "Let's try to figure it out"
+      : "Let's test what you think";
     pollStatus(saved
-      ? 'Prediction saved. Now flip the deck to test one shuffle.'
-      : 'Prediction noted for this visit (not saved). Now flip the deck.');
+      ? 'Prediction saved. Continue to experimental probability below.'
+      : 'Your choice was not saved. Continue to experimental probability below.');
+    if (autoScroll) {
+      requestAnimationFrame(() => {
+        pollEl('experiment-title').focus({preventScroll: true});
+        pollEl('experiment-section').scrollIntoView({
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+          block: 'start'
+        });
+      });
+    }
   }
-  function showPollRecorded(data) {
+  function showPollRecorded(data, autoScroll = true) {
     renderPollCounts(data);
     pollRadios().forEach(r => { r.checked = r.value === pollState.saved.choice; });
-    predictionReady(true);
+    predictionReady(true, autoScroll);
   }
   async function confirmPoll(token, retries) {
     for (let attempt = 0; attempt < retries; attempt++) {
@@ -476,13 +495,6 @@
       pollEl('poll-results').hidden = true;
       predictionReady(false);
     });
-    pollEl('poll-to-deck').addEventListener('click', async () => {
-      if (!pollState.predicted || state.busy) return;
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      pollEl('experiment-section').scrollIntoView({behavior: reduced ? 'auto' : 'smooth', block: 'start'});
-      if (!reduced) await new Promise(resolve => setTimeout(resolve, 320));
-      flipOne();
-    });
     pollEl('poll-submit').addEventListener('click', submitPoll);
     pollEl('poll-refresh').addEventListener('click', refreshPoll);
     pollEl('poll-again').addEventListener('click', () => {
@@ -490,7 +502,6 @@
       setPollSaved(null);
       pollRadios().forEach(r => {r.checked = false; r.disabled = false;});
       pollEl('poll-results').hidden = true;
-      pollEl('poll-next').hidden = true;
       pollEl('poll-submit').hidden = false;
       pollEl('poll-submit').disabled = true;
       pollEl('poll-skip').hidden = false;
@@ -511,7 +522,7 @@
       const result = await pollGet(saved.token);
       if (result && result.ok && result.recorded) {
         setPollSaved({...saved, pending:false});
-        showPollRecorded(result);
+        showPollRecorded(result, false);
       } else if (saved.pending) {
         pollRadios().forEach(r => {r.disabled = false;});
         pollStatus('Your earlier prediction was not confirmed. Select “Save my prediction” to retry.');
@@ -750,8 +761,8 @@
     el('proof-section').hidden = true;
     el('thousand').hidden = true;
     el('hundredThousand').hidden = true;
-    el('one').textContent = 'Flip the Deck';
-    el('experiment-hint').textContent = 'Your prediction is in. Now flip one deck and watch for the first ace.';
+    el('one').textContent = 'Run the Experiment';
+    el('experiment-hint').textContent = 'Turn over cards until the first ace appears, then look at the very next card.';
     renderStage(null, 0);
     renderResults();
   }
