@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f7f6f2" />
+  <meta name="description" content="The First Ace: a one-page interactive probability investigation with a shuffled deck of cards." />
+  <title>The First Ace | A Probability Investigation</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f7f6f2;
+      --white: #ffffff;
+      --ink: #192c39;
+      --muted: #61707a;
+      --edge: #dedfdc;
+      --teal: #167e78;
+      --teal-wash: #e2f2ef;
+      --gold: #ac6f23;
+      --gold-wash: #fbefd9;
+      --shadow: 0 14px 45px rgba(19, 38, 48, .075);
+      --serif: Georgia, 'Times New Roman', serif;
+      --sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.55; }
+    button { font: inherit; }
+    .wrap { max-width: 1060px; margin: 0 auto; padding: 0 28px; }
+    .topbar { border-bottom: 1px solid var(--edge); }
+    .topbar .wrap { min-height: 70px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .brand { display:flex; align-items:center; gap: 10px; font-weight: 800; font-size: 14px; letter-spacing: .035em; }
+    .brandmark { display:grid; place-items:center; width: 31px; height: 37px; border: 2px solid var(--ink); border-radius: 5px; background:#fff; font-family:var(--serif); font-size:24px; line-height:1; transform:rotate(-7deg); }
+    .topnote { color: var(--muted); font-size: 12px; text-align:right; }
+    .hero { padding: 67px 0 63px; display:grid; grid-template-columns: 1.25fr .75fr; align-items:center; gap: 36px; }
+    .eyebrow { text-transform: uppercase; font-size: 12px; font-weight:800; letter-spacing: .17em; color: var(--teal); }
+    h1 { font: 700 clamp(48px, 7.4vw, 82px)/1.045 var(--serif); letter-spacing:-.055em; margin: 18px 0 21px; }
+    h1 em { color: var(--teal); font-weight: normal; }
+    .lead { max-width: 570px; color:#435460; font-size: clamp(17px, 1.9vw, 19px); line-height:1.65; margin:0; }
+    .hero-note { font-size:14px; color:var(--muted); margin:25px 0 0; }
+    .hero-cards { display:flex; justify-content:center; align-items:center; gap:14px; padding-top: 20px; }
+    .hero-or { font: italic 19px var(--serif); color:#9a9f9d; }
+    .bigcard { width:clamp(104px,11vw,142px); aspect-ratio: .70; background:#fff; border:1px solid #d7dbd9; border-radius:11px; box-shadow: 0 11px 29px #1c30331b; position:relative; display:grid; place-items:center; }
+    .bigcard:first-child { transform:rotate(-7deg) translateY(9px); }
+    .bigcard:last-child { transform:rotate(7deg) translateY(9px); }
+    .corner { position:absolute; left:13px; top:10px; font-size:20px; font-weight:800; line-height:1; display:flex; flex-direction:column; align-items:center; }
+    .corner small { font-size:18px; line-height:1; }
+    .center-suit { font-size:clamp(55px, 7vw, 78px); line-height:1; }
+    .black { color:#263642; }
+    .red { color:#bd4d4e; }
+    .section { padding:35px 0; }
+    .section-head { display:flex; gap:20px; align-items:baseline; margin-bottom: 19px; }
+    .section-num { font-weight:800; color:var(--teal); font-size:13px; letter-spacing:.08em; flex:none; }
+    h2 { font:700 clamp(27px, 3.3vw, 37px)/1.2 var(--serif); letter-spacing:-.035em; margin:0; }
+    .section-sub { color:var(--muted); font-size:15px; margin: 5px 0 20px; }
+    .lab { background:var(--white); border:1px solid var(--edge); box-shadow:var(--shadow); border-radius:18px; padding:clamp(21px,3.7vw,38px); }
+    .lab-top { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:14px; }
+    .lab-top h3 { margin:0; font-size:20px; letter-spacing:-.025em; }
+    .lab-top p { margin:5px 0 0; color:var(--muted); font-size:14px; }
+    .buttons { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .button { border:1px solid var(--ink); border-radius:9px; background:var(--ink); color:white; font-weight:750; font-size:13px; padding:11px 14px; min-height:44px; cursor:pointer; transition: transform .15s, background .15s; }
+    .button:hover { background:#2e4a5c; transform:translateY(-1px); }
+    .button:focus-visible, .reset:focus-visible { outline:3px solid var(--teal); outline-offset:3px; }
+    .button.secondary { background:#fff; color:var(--ink); border-color:#cbd4d4; }
+    .button.secondary:hover { background:#f3f8f7; }
+    .button:disabled { opacity:.57; cursor:wait; transform:none; }
+    .reset { border:0; background:none; color:var(--muted); font-size:13px; text-decoration:underline; text-underline-offset:3px; cursor:pointer; padding:9px; }
+    .stage { margin-top:25px; background:#f7f9f8; border:1px solid #e3eae8; border-radius:13px; padding:20px; }
+    .stage-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    .stage-head strong { font-size:13px; }
+    .stage-head span { color:var(--muted); font-size:12px; }
+    .deck { display:grid; grid-template-columns: repeat(13, minmax(0,1fr)); gap:5px; margin:0 auto; max-width:800px; }
+    .mini { position:relative; aspect-ratio: 0.73; min-height:24px; border-radius:5px; display:grid; place-items:center; border:1px solid #d0d9d9; background:#fff; font-size:clamp(10px,1.2vw,15px); font-weight:800; line-height:1; }
+    .mini.back { background: repeating-linear-gradient(45deg,#e6edec,#e6edec 3px,#f6faf9 3px,#f6faf9 7px); border-color:#d4dedc; color:transparent; }
+    .mini.first { outline:3px solid #b4863c; outline-offset:-2px; background:#fff4de; z-index:1; }
+    .mini.next { outline:3px solid var(--teal); outline-offset:-2px; background:#e6f5f1; z-index:1; }
+    .mini .tag { position:absolute; bottom:-7px; left:50%; transform:translateX(-50%); border-radius:3px; background:var(--ink); color:white; font-size:8px; line-height:1; padding:3px 4px; z-index:2; white-space:nowrap; }
+    .mini.first .tag { background:var(--gold); }
+    .mini.next .tag { background:var(--teal); }
+    .readout { display:grid; grid-template-columns:1fr 1fr 1.45fr; gap:11px; margin-top:25px; }
+    .readout-item { border:1px solid var(--edge); background:#fff; border-radius:9px; padding:13px 15px; min-height:85px; }
+    .readout-item span { display:block; color:var(--muted); font-size:12px; margin-bottom:3px; }
+    .readout-item strong { display:block; font-size:18px; font-weight:800; }
+    .readout-item.final { border-color:#b5d6d0; background:#ebf6f2; }
+    .readout-item.final.gold { border-color:#ead1a5; background:#fcf2e1; }
+    .note { margin-top:14px; font-size:13px; color:var(--muted); min-height:20px; }
+    .results { display:grid; grid-template-columns: 245px 1fr; gap:30px; align-items:center; }
+    .countbox { display:flex; flex-direction:column; justify-content:center; padding:24px; border:1px solid #d8e9e4; border-radius:14px; background:#eaf4f1; }
+    .countbox .count { font:700 clamp(45px, 5vw, 65px)/1.05 var(--serif); font-variant-numeric:tabular-nums; letter-spacing:-.05em; }
+    .countbox .caption { font-size:13px; color:#47645f; margin-top:8px; }
+    .barrow { margin: 10px 0 21px; }
+    .barlabel { display:flex; justify-content:space-between; align-items:baseline; gap:12px; font-size:14px; margin-bottom:7px; }
+    .barlabel strong { font-size:15px; }
+    .barlabel .pct { font-weight:800; font-variant-numeric:tabular-nums; }
+    .track { height:16px; width:100%; background:#e9eeec; border-radius:20px; position:relative; overflow:hidden; }
+    .fill { width:0%; height:100%; border-radius:20px; background:var(--teal); transition:width .4s; }
+    .fill.gold { background:#d1a45a; }
+    .target { position:absolute; height:100%; border-left:2px dashed #243e4c; left:48.076923%; top:0; z-index:2; }
+    .axis { display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:11px; margin-top:5px; }
+    .axis .true { font-weight:700; color:#314752; }
+    .outcome-note { margin:4px 0 0; font-size:14px; color:var(--muted); }
+    .twist { border-top:1px solid var(--edge); margin-top:25px; padding-top:24px; display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .twist-box { background:#f8f9f7; border:1px solid #e5e7e4; border-radius:12px; padding:18px; }
+    .twist-box h4 { margin:0 0 6px; font-size:14px; }
+    .twist-box p { color:var(--muted); margin:0; font-size:13px; line-height:1.5; }
+    .twist-box .fraction { font:700 30px/1.3 var(--serif); color:var(--ink); margin:5px 0 3px; }
+    .twist-box .empirical { color:var(--teal); font-weight:700; font-size:12px; margin-top:9px; }
+    .proof { border-top: 1px solid var(--edge); padding-top:31px; margin-top:4px; }
+    .proof-lead { font-size:18px; color:#465660; max-width:790px; margin: 9px 0 25px; }
+    .proof-steps { display:grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap:12px; }
+    .proof-step { border:1px solid var(--edge); border-radius:12px; background:#fff; padding:22px 17px 19px; }
+    .proof-step .number { font:700 48px/1 var(--serif); color:var(--teal); margin:0 0 10px; letter-spacing:-.07em; }
+    .proof-step strong { display:block; font-size:15px; margin-bottom:5px; }
+    .proof-step p { color:var(--muted); font-size:13px; margin:0; line-height:1.55; }
+    .reveal { margin-top:17px; border-radius:13px; padding:26px; background:var(--ink); color:#fff; text-align:center; }
+    .reveal .result { font:700 clamp(30px, 4.5vw, 49px)/1.12 var(--serif); letter-spacing:-.045em; margin:3px 0 10px; }
+    .reveal p { max-width:660px; margin:0 auto; color:#d4e0e0; font-size:14px; }
+    .footer { border-top:1px solid var(--edge); color:var(--muted); font-size:12px; padding:25px 0 38px; margin-top:35px; }
+    .footer .wrap { display:flex; align-items:center; justify-content:space-between; gap:15px; flex-wrap:wrap; }
+    @media (max-width:740px) {
+      .wrap { padding:0 16px; }
+      .topbar .wrap { min-height:60px; }
+      .topnote { font-size:11px; }
+      .hero { padding:48px 0 40px; grid-template-columns:1fr; gap:14px; }
+      .hero-cards { padding-top:4px; justify-content:flex-start; padding-left:15px; }
+      .hero-note { margin-top:17px; }
+      .section { padding:27px 0; }
+      .lab { border-radius:14px; }
+      .lab-top { flex-direction:column; }
+      .buttons { width:100%; }
+      .button { flex:1; padding:10px 9px; }
+      .stage { padding:12px; }
+      .deck { gap:3px; }
+      .mini { font-size:11px; min-height:18px; border-radius:3px; }
+      .mini .tag { font-size:6px; bottom:-6px; }
+      .readout { grid-template-columns:1fr 1fr; gap:7px; margin-top:20px; }
+      .readout-item { padding:10px 11px; min-height:72px; }
+      .readout-item strong { font-size:15px; }
+      .readout-item.final { grid-column:span 2; }
+      .results { grid-template-columns:1fr; gap:20px; }
+      .countbox { padding:16px 20px; }
+      .countbox .count { font-size:46px; }
+      .twist { grid-template-columns:1fr; }
+      .proof-steps { grid-template-columns:1fr; }
+      .proof-step { padding:17px; }
+      .proof-step .number { font-size:38px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior:auto; } *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+<header class="topbar"><div class="wrap">
+  <div class="brand"><span class="brandmark" aria-hidden="true">A</span> THE FIRST ACE</div>
+  <div class="topnote">A one-page probability investigation</div>
+</div></header>
+<main>
+  <section class="wrap hero" aria-labelledby="main-title">
+    <div>
+      <div class="eyebrow">One deck. One question.</div>
+      <h1 id="main-title">What comes <em>next?</em></h1>
+      <p class="lead">Shuffle a standard 52-card deck. Turn over cards until you find the <strong>first ace</strong>. Is the very next card more likely to be the <strong>Ace of Spades</strong> or the <strong>Two of Clubs</strong>?</p>
+      <p class="hero-note">Make a prediction. Then test it.</p>
+    </div>
+    <div class="hero-cards" aria-label="Ace of Spades versus Two of Clubs">
+      <div class="bigcard black"><span class="corner">A<small>♠</small></span><span class="center-suit" aria-hidden="true">♠</span></div>
+      <span class="hero-or">or</span>
+      <div class="bigcard black"><span class="corner">2<small>♣</small></span><span class="center-suit" aria-hidden="true">♣</span></div>
+    </div>
+  </section>
+  <section class="wrap section" aria-labelledby="experiment-title">
+    <div class="section-head"><span class="section-num">01 / EXPERIMENT</span><h2 id="experiment-title">Shuffle. Reveal. Repeat.</h2></div>
+    <p class="section-sub">Watch one deck unfold, or run thousands of shuffles to see what happens over time.</p>
+    <div class="lab">
+      <div class="lab-top">
+        <div><h3>Try the experiment</h3><p>Each trial starts with a fresh, randomly shuffled deck.</p></div>
+        <div class="buttons" aria-label="Simulation controls">
+          <button id="one" class="button" type="button">Flip 1 deck</button>
+          <button id="thousand" class="button secondary" type="button">+1,000</button>
+          <button id="hundredThousand" class="button secondary" type="button">+100,000</button>
+          <button id="reset" class="reset" type="button">Reset</button>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="stage-head"><strong id="deck-title">Your shuffled deck</strong><span id="deck-subtitle">52 cards · all face down</span></div>
+        <div id="deck" class="deck" role="img" aria-label="52-card deck, awaiting first shuffle"></div>
+        <div class="readout" aria-live="polite" aria-atomic="true">
+          <div class="readout-item"><span>First ace</span><strong id="first-card">Not revealed</strong></div>
+          <div class="readout-item"><span>Next card</span><strong id="next-card">Not revealed</strong></div>
+          <div class="readout-item final" id="outcome-container"><span>Result of this shuffle</span><strong id="outcome">Ready when you are</strong></div>
+        </div>
+        <div class="note" id="stage-note">The gold outline marks the first ace. Teal marks the very next card.</div>
+      </div>
+    </div>
+  </section>
+  <section class="wrap section" aria-labelledby="results-title">
+    <div class="section-head"><span class="section-num">02 / EVIDENCE</span><h2 id="results-title">What do the shuffles say?</h2></div>
+    <div class="lab">
+      <div class="results">
+        <div class="countbox"><div class="count" id="total" aria-live="polite">0</div><div class="caption">total decks shuffled</div></div>
+        <div>
+          <div class="barrow"><div class="barlabel"><strong>Ace of Spades ♠</strong><span class="pct" id="spade-rate">0.000% · 0 decks</span></div><div class="track"><div class="fill" id="spade-fill"></div><div class="target" aria-hidden="true"></div></div></div>
+          <div class="barrow"><div class="barlabel"><strong>Two of Clubs ♣</strong><span class="pct" id="club-rate">0.000% · 0 decks</span></div><div class="track"><div class="fill gold" id="club-fill"></div><div class="target" aria-hidden="true"></div></div></div>
+          <div class="axis"><span>0%</span><span class="true">Dashed line: theoretical 1.923%</span><span>4%</span></div>
+          <p class="outcome-note" id="outcome-note">Run a few shuffles to start collecting evidence. Bars use a magnified 0–4% scale and are capped at 4%.</p>
+        </div>
+      </div>
+      <div class="twist">
+        <div class="twist-box"><h4>What if the 2♣ appeared earlier?</h4><div class="fraction">1 in 5 <span style="font:500 14px var(--sans);color:var(--muted)">= 20%</span></div><p>The Two of Clubs comes before all four aces in 20% of shuffles.</p><div class="empirical" id="club-before">Observed: no shuffles yet</div></div>
+        <div class="twist-box"><h4>What if the A♠ is the first ace?</h4><div class="fraction">1 in 4 <span style="font:500 14px var(--sans);color:var(--muted)">= 25%</span></div><p>The Ace of Spades itself is the first ace in 25% of shuffles.</p><div class="empirical" id="spade-first">Observed: no shuffles yet</div></div>
+      </div>
+    </div>
+  </section>
+  <section class="wrap section proof" aria-labelledby="proof-title">
+    <div class="section-head"><span class="section-num">03 / THE REVEAL</span><h2 id="proof-title">Why is it a tie?</h2></div>
+    <p class="proof-lead">The two cards are eliminated in different ways, but there's a surprisingly simple argument that works for <em>either</em> one.</p>
+    <div class="proof-steps">
+      <div class="proof-step"><div class="number">51</div><strong>Take out the target card.</strong><p>Remove the A♠ or the 2♣, then shuffle the other 51 cards. Find their first ace.</p></div>
+      <div class="proof-step"><div class="number">52</div><strong>Choose an insertion gap.</strong><p>There are 52 equally likely places to put the removed card back: before, between, or after the 51 cards.</p></div>
+      <div class="proof-step"><div class="number">1</div><strong>Only one gap wins.</strong><p>Exactly one gap puts that card immediately after the first ace, without changing which ace comes first.</p></div>
+    </div>
+    <div class="reveal"><div class="eyebrow" style="color:#95dbd0">THE MATHEMATICAL RESULT</div><div class="result">A♠ = 2♣ = 1 / 52</div><p>Each card has exactly a <strong>1.923%</strong> chance of appearing immediately after the first ace. Different stories, identical odds.</p></div>
+  </section>
+</main>
+<footer class="footer"><div class="wrap"><span>THE FIRST ACE · An interactive mathematics resource</span><span>Uniform 52-card shuffles · Fisher–Yates algorithm · No data collected</span></div></footer>
+<script>
+(function () {
+  'use strict';
+  const SUITS = [
+    { symbol: '♠', label: 'Spades', black: true },
+    { symbol: '♥', label: 'Hearts', black: false },
+    { symbol: '♦', label: 'Diamonds', black: false },
+    { symbol: '♣', label: 'Clubs', black: true }
+  ];
+  const MASTER = [];
+  for (const suit of SUITS) for (let rank = 1; rank <= 13; rank++) MASTER.push({ rank, suit, id: suit.symbol + rank });
+  const SPADE_ID = '♠1';
+  const CLUB_ID = '♣2';
+  const nfmt = new Intl.NumberFormat('en-CA');
+  const el = id => document.getElementById(id);
+  const state = { total: 0, spade: 0, club: 0, other: 0, clubBefore: 0, spadeFirst: 0, last: null, busy: false };
+  const controls = [el('one'), el('thousand'), el('hundredThousand'), el('reset')];
+
+  function shuffleDeck() {
+    const a = MASTER.slice();
+    // Every permutation is equally likely, provided the random source is uniform.
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function evaluate(deck) {
+    let first = -1, clubPosition = -1;
+    for (let i = 0; i < deck.length; i++) {
+      if (deck[i].id === CLUB_ID) clubPosition = i;
+      if (first < 0 && deck[i].rank === 1) first = i;
+    }
+    // The first ace is guaranteed to have a next card: four aces must fit in the deck.
+    const next = deck[first + 1];
+    const result = next.id === SPADE_ID ? 'spade' : next.id === CLUB_ID ? 'club' : 'other';
+    return { first, next, result, clubBefore: clubPosition < first, spadeFirst: deck[first].id === SPADE_ID, deck };
+  }
+  function record(e) {
+    state.total++;
+    state[e.result]++;
+    if (e.clubBefore) state.clubBefore++;
+    if (e.spadeFirst) state.spadeFirst++;
+    state.last = e;
+  }
+  function label(card) {
+    const rank = card.rank === 1 ? 'A' : card.rank === 11 ? 'J' : card.rank === 12 ? 'Q' : card.rank === 13 ? 'K' : String(card.rank);
+    return rank + card.suit.symbol;
+  }
+  function drawDeck(e, revealedCount) {
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < 52; i++) {
+      const d = document.createElement('div');
+      const visible = e && i < revealedCount;
+      d.className = 'mini ' + (visible ? (e.deck[i].suit.black ? 'black' : 'red') : 'back');
+      d.textContent = visible ? label(e.deck[i]) : '·';
+      if (visible && i === e.first) {
+        d.classList.add('first');
+        const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'FIRST'; d.appendChild(t);
+      }
+      if (visible && i === e.first + 1) {
+        d.classList.add('next');
+        const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'NEXT'; d.appendChild(t);
+      }
+      d.title = visible ? `Card ${i+1}: ${label(e.deck[i])}` : `Card ${i+1}: face down`;
+      frag.appendChild(d);
+    }
+    el('deck').replaceChildren(frag);
+    el('deck').setAttribute('aria-label', e ? `A shuffled deck; ${Math.min(revealedCount,52)} cards revealed. First ace is card ${e.first+1}.` : '52 playing cards face down');
+  }
+  function renderStage(e, revealedCount) {
+    if (!e) {
+      drawDeck(null, 0);
+      el('deck-title').textContent = 'Your shuffled deck';
+      el('deck-subtitle').textContent = '52 cards · all face down';
+      el('first-card').textContent = 'Not revealed';
+      el('next-card').textContent = 'Not revealed';
+      el('outcome').textContent = 'Ready when you are';
+      el('outcome-container').classList.remove('gold');
+      el('stage-note').textContent = 'The gold outline marks the first ace. Teal marks the very next card.';
+      return;
+    }
+    drawDeck(e, revealedCount);
+    const aceVisible = revealedCount > e.first;
+    const nextVisible = revealedCount > e.first + 1;
+    el('deck-title').textContent = 'A fresh shuffled deck';
+    el('deck-subtitle').textContent = `${Math.min(revealedCount,52)} of 52 cards turned over`;
+    el('first-card').textContent = aceVisible ? `${label(e.deck[e.first])} · card ${e.first+1}` : 'Searching…';
+    el('next-card').textContent = nextVisible ? `${label(e.next)} · card ${e.first+2}` : 'Waiting…';
+    el('outcome').textContent = !nextVisible ? 'Keep flipping…' : e.result === 'spade' ? 'Ace of Spades!' : e.result === 'club' ? 'Two of Clubs!' : 'Neither target card';
+    el('outcome-container').classList.toggle('gold', e.result === 'club' && nextVisible);
+    el('stage-note').textContent = nextVisible
+      ? (e.clubBefore ? 'The Two of Clubs had already appeared before the first ace.' : 'The Two of Clubs had not appeared before the first ace.') + (e.spadeFirst ? ' The Ace of Spades was itself the first ace.' : '')
+      : 'Look for the first ace (gold), then the next card (teal).';
+  }
+  function percent(count) { return state.total ? 100 * count / state.total : 0; }
+  function renderResults() {
+    el('total').textContent = nfmt.format(state.total);
+    for (const [key, id] of [['spade','spade'],['club','club']]) {
+      const p = percent(state[key]);
+      el(id+'-rate').textContent = `${p.toFixed(3)}% · ${nfmt.format(state[key])} ${state[key] === 1 ? 'deck' : 'decks'}`;
+      el(id+'-fill').style.width = `${Math.max(0, Math.min(100, p / 4 * 100))}%`;
+    }
+    el('club-before').textContent = state.total ? `Observed: ${nfmt.format(state.clubBefore)} / ${nfmt.format(state.total)} (${percent(state.clubBefore).toFixed(2)}%)` : 'Observed: no shuffles yet';
+    el('spade-first').textContent = state.total ? `Observed: ${nfmt.format(state.spadeFirst)} / ${nfmt.format(state.total)} (${percent(state.spadeFirst).toFixed(2)}%)` : 'Observed: no shuffles yet';
+    el('outcome-note').textContent = !state.total
+      ? 'Run a few shuffles to start collecting evidence. Bars use a magnified 0–4% scale and are capped at 4%.'
+      : `The next card was neither target in ${nfmt.format(state.other)} of ${nfmt.format(state.total)} shuffles. Bars use a magnified 0–4% scale and are capped at 4%.`;
+  }
+  function busy(yes) { state.busy = yes; controls.forEach(c => c.disabled = yes); }
+  async function flipOne() {
+    if (state.busy) return;
+    busy(true);
+    const e = evaluate(shuffleDeck());
+    const stop = e.first + 2;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) renderStage(e, stop);
+    else {
+      renderStage(e, 0);
+      for (let n = 1; n <= stop; n++) {
+        await new Promise(resolve => setTimeout(resolve, 65));
+        renderStage(e, n);
+      }
+    }
+    record(e);
+    renderResults();
+    busy(false);
+  }
+  async function batch(count) {
+    if (state.busy) return;
+    busy(true);
+    // Chunk work so the page remains responsive even for 100,000 full-deck shuffles.
+    const chunk = 4000;
+    let done = 0;
+    while (done < count) {
+      for (let i = 0, end = Math.min(chunk,count-done); i < end; i++) record(evaluate(shuffleDeck()));
+      done += Math.min(chunk, count-done);
+      renderResults();
+      el('deck-subtitle').textContent = `Running ${nfmt.format(done)} of ${nfmt.format(count)} new shuffles…`;
+      if (done < count) await new Promise(resolve => requestAnimationFrame(resolve));
+    }
+    renderStage(state.last, state.last.first + 2);
+    renderResults();
+    busy(false);
+  }
+  function reset() {
+    if (state.busy) return;
+    for (const key of ['total','spade','club','other','clubBefore','spadeFirst']) state[key] = 0;
+    state.last = null;
+    renderStage(null, 0);
+    renderResults();
+  }
+  el('one').addEventListener('click', flipOne);
+  el('thousand').addEventListener('click', () => batch(1000));
+  el('hundredThousand').addEventListener('click', () => batch(100000));
+  el('reset').addEventListener('click', reset);
+  renderStage(null,0);
+  renderResults();
+  // Exposes a small test-only interface for verification in a local browser.
+  window.__firstAceTest = { shuffleDeck, evaluate, state, batch, reset };
+}());
+</script>
+</body>
+</html>
