@@ -278,7 +278,8 @@
           <button type="button" class="button secondary reflection-choice" data-reflect="no">No</button>
         </div>
         <div id="reflection-feedback" class="reflection-feedback" role="status" aria-live="polite" hidden></div>
-        <p class="reflection-follow" id="reflection-follow" hidden>One deck is one observation. Try more shuffles to investigate the pattern.</p>
+        <p class="reflection-follow" id="reflection-follow" hidden>One deck is one observation. What happens when we try many?</p>
+        <button id="reflection-run" class="button" type="button" hidden>Run 1,000 shuffles</button>
       </div>
     </div>
   </section>
@@ -320,7 +321,7 @@
   const POLL_URL = 'https://script.google.com/macros/s/AKfycbzBfS8f-oEVjeamg2PC0PkiZbcuF8LmBRDl2Q_rtW__rDxj8c4d5fspL9QRupqrgOITaA/exec';
   const POLL_STORAGE_KEY = 'first-ace-prediction-pilot-v1';
   const POLL_CHOICES = ['ace_spades', 'two_clubs', 'equally_likely', 'not_sure'];
-  const pollState = {saved: null, busy:false, request:0};
+  const pollState = {saved: null, busy:false, request:0, predicted:false};
   const pollEl = id => document.getElementById(id);
   const pollRadios = () => Array.from(document.querySelectorAll('input[name="prediction"]'));
   const isPollToken = token => typeof token === 'string' && /^[A-Za-z0-9_-]{24,80}$/.test(token);
@@ -348,6 +349,7 @@
     pollState.busy = value;
     pollEl('poll-submit').disabled = value || (!pollState.saved && !pollRadios().some(r => r.checked));
     pollEl('poll-refresh').disabled = value;
+    pollEl('poll-skip').disabled = value || !pollRadios().some(r => r.checked);
   }
   function pollToken() {
     const bytes = new Uint8Array(24);
@@ -389,12 +391,22 @@
     }
     pollEl('poll-results').hidden = false;
   }
+  function predictionReady(saved) {
+    pollState.predicted = true;
+    pollEl('poll-next').hidden = false;
+    pollEl('poll-submit').hidden = true;
+    pollEl('poll-skip').hidden = true;
+    pollEl('poll-again').hidden = false;
+    pollEl('experiment-section').hidden = false;
+    pollRadios().forEach(r => { r.disabled = true; });
+    pollStatus(saved
+      ? 'Prediction saved. Now flip the deck to test one shuffle.'
+      : 'Prediction noted for this visit (not saved). Now flip the deck.');
+  }
   function showPollRecorded(data) {
     renderPollCounts(data);
-    pollEl('poll-submit').hidden = true;
-    pollEl('poll-again').hidden = false;
-    pollRadios().forEach(r => { r.checked = r.value === pollState.saved.choice; r.disabled = true; });
-    pollStatus('Prediction saved. Compare your choice with everyone else.');
+    pollRadios().forEach(r => { r.checked = r.value === pollState.saved.choice; });
+    predictionReady(true);
   }
   async function confirmPoll(token, retries) {
     for (let attempt = 0; attempt < retries; attempt++) {
@@ -454,7 +466,23 @@
   async function initPoll() {
     pollRadios().forEach(r => r.addEventListener('change', () => {
       if (!pollState.saved) pollEl('poll-submit').disabled = false;
+      pollEl('poll-skip').disabled = false;
     }));
+    pollEl('poll-skip').addEventListener('click', () => {
+      if (pollState.busy || pollState.predicted || !pollRadios().some(r => r.checked)) return;
+      // The remote poll is optional; the student can still explore if it is offline.
+      // An earlier attempted request may still have reached Google.
+      setPollSaved(null);
+      pollEl('poll-results').hidden = true;
+      predictionReady(false);
+    });
+    pollEl('poll-to-deck').addEventListener('click', async () => {
+      if (!pollState.predicted || state.busy) return;
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      pollEl('experiment-section').scrollIntoView({behavior: reduced ? 'auto' : 'smooth', block: 'start'});
+      if (!reduced) await new Promise(resolve => setTimeout(resolve, 320));
+      flipOne();
+    });
     pollEl('poll-submit').addEventListener('click', submitPoll);
     pollEl('poll-refresh').addEventListener('click', refreshPoll);
     pollEl('poll-again').addEventListener('click', () => {
@@ -462,10 +490,16 @@
       setPollSaved(null);
       pollRadios().forEach(r => {r.checked = false; r.disabled = false;});
       pollEl('poll-results').hidden = true;
+      pollEl('poll-next').hidden = true;
       pollEl('poll-submit').hidden = false;
       pollEl('poll-submit').disabled = true;
+      pollEl('poll-skip').hidden = false;
+      pollEl('poll-skip').disabled = true;
       pollEl('poll-again').hidden = true;
-      pollStatus('Choose an answer before you start the experiment.');
+      pollState.predicted = false;
+      reset();
+      pollEl('experiment-section').hidden = true;
+      pollStatus('Choose an answer, then save your prediction or continue without saving.');
     });
     const saved = getPollSaved();
     if (!saved) return;
@@ -505,6 +539,8 @@
   const nfmt = new Intl.NumberFormat('en-CA');
   const el = id => document.getElementById(id);
   const state = { total: 0, spade: 0, club: 0, other: 0, clubBefore: 0, spadeFirst: 0, last: null, busy: false };
+  const journey = {reflected: false, ranBatch: false};
+  let reflectionAnswer = null;
   const controls = [el('one'), el('thousand'), el('hundredThousand'), el('reset')];
 
   function shuffleDeck() {
@@ -598,10 +634,71 @@
       ? 'Run a few shuffles to start collecting evidence. Bars use a magnified 0–4% scale and are capped at 4%.'
       : `The next card was neither target in ${nfmt.format(state.other)} of ${nfmt.format(state.total)} shuffles. Bars use a magnified 0–4% scale and are capped at 4%.`;
   }
-  function busy(yes) { state.busy = yes; controls.forEach(c => c.disabled = yes); }
+  function reflectionFor(e) {
+    if (e.clubBefore) return {
+      question: 'The 2♣ appeared before any ace. Can we conclude that it will always come before the first ace if we shuffle again?',
+      answer: 'no',
+      explanation: 'This is one shuffle, not a rule. In a new random shuffle, the Two of Clubs could appear before the first ace or after it.'
+    };
+    if (e.spadeFirst) return {
+      question: 'The A♠ was the first ace this time. Could it appear immediately after the first ace in a different shuffle?',
+      answer: 'yes',
+      explanation: 'Yes. If another ace appears first in a new shuffle, the Ace of Spades could be the very next card.'
+    };
+    if (e.result === 'spade' || e.result === 'club') {
+      const card = e.result === 'spade' ? 'Ace of Spades' : 'Two of Clubs';
+      return {
+        question: 'The ' + card + ' came immediately after the first ace. Does this one result prove that it is the more likely card?',
+        answer: 'no',
+        explanation: 'One result cannot establish which outcome is more likely. We need many shuffles, or mathematical reasoning, to compare the two probabilities.'
+      };
+    }
+    return {
+      question: 'The 2♣ has not appeared among the cards turned over. Must it still be among the face-down cards?',
+      answer: 'yes',
+      explanation: 'Yes. The deck contains exactly one Two of Clubs. Since we have not seen it, it must be somewhere in the remaining face-down cards.'
+    };
+  }
+  function showReflection(e) {
+    reflectionAnswer = reflectionFor(e);
+    el('reflection-title').textContent = reflectionAnswer.question;
+    el('reflection').hidden = false;
+    el('reflection-feedback').hidden = true;
+    el('reflection-feedback').replaceChildren();
+    el('reflection-follow').hidden = true;
+    el('reflection-run').hidden = true;
+    document.querySelectorAll('[data-reflect]').forEach(b => b.disabled = false);
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el('reflection').scrollIntoView({behavior: reduced ? 'auto' : 'smooth', block:'nearest'});
+  }
+  function answerReflection(answer) {
+    if (!reflectionAnswer || !['yes','no'].includes(answer) || el('reflection-feedback').hidden === false) return;
+    document.querySelectorAll('[data-reflect]').forEach(b => b.disabled = true);
+    const correct = answer === reflectionAnswer.answer;
+    const heading = document.createElement('strong');
+    heading.textContent = correct ? 'That follows from the evidence.' : 'Not quite. Look at what this one shuffle tells us.';
+    const explanation = document.createElement('span');
+    explanation.textContent = reflectionAnswer.explanation;
+    el('reflection-feedback').replaceChildren(heading, explanation);
+    el('reflection-feedback').hidden = false;
+    el('reflection-follow').hidden = false;
+    el('reflection-run').hidden = false;
+    journey.reflected = true;
+    el('thousand').hidden = false;
+    el('hundredThousand').hidden = false;
+    el('results-section').hidden = false;
+    el('experiment-hint').textContent = 'Now test the pattern with more shuffles. The results below will update as you go.';
+    el('one').textContent = 'Flip another deck';
+  }
+  function busy(yes) {
+    state.busy = yes;
+    controls.forEach(c => c.disabled = yes);
+    el('reflection-run').disabled = yes;
+  }
   async function flipOne() {
-    if (state.busy) return;
+    if (state.busy || !pollState.predicted) return;
     busy(true);
+    el('reflection').hidden = true;
     const e = evaluate(shuffleDeck());
     const stop = e.first + 2;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -616,10 +713,12 @@
     record(e);
     renderResults();
     busy(false);
+    showReflection(e);
   }
   async function batch(count) {
-    if (state.busy) return;
+    if (state.busy || !pollState.predicted || !journey.reflected) return;
     busy(true);
+    el('reflection').hidden = true;
     // Chunk work so the page remains responsive even for 100,000 full-deck shuffles.
     const chunk = 4000;
     let done = 0;
@@ -632,15 +731,36 @@
     }
     renderStage(state.last, state.last.first + 2);
     renderResults();
+    journey.ranBatch = true;
+    el('proof-section').hidden = false;
+    el('experiment-hint').textContent = 'Compare the observed percentages with 1.923%. Why do they move closer as the number of shuffles increases?';
     busy(false);
   }
   function reset() {
     if (state.busy) return;
     for (const key of ['total','spade','club','other','clubBefore','spadeFirst']) state[key] = 0;
     state.last = null;
+    journey.reflected = false;
+    journey.ranBatch = false;
+    reflectionAnswer = null;
+    el('reflection').hidden = true;
+    el('reflection-run').hidden = true;
+    el('results-section').hidden = true;
+    el('proof-section').hidden = true;
+    el('thousand').hidden = true;
+    el('hundredThousand').hidden = true;
+    el('one').textContent = 'Flip the deck';
+    el('experiment-hint').textContent = 'Your prediction is in. Now flip one deck and watch for the first ace.';
     renderStage(null, 0);
     renderResults();
   }
+  document.querySelectorAll('[data-reflect]').forEach(b => b.addEventListener('click', () => answerReflection(b.dataset.reflect)));
+  el('reflection-run').addEventListener('click', () => {
+    batch(1000).then(() => {
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      el('results-section').scrollIntoView({behavior:reduced ? 'auto':'smooth',block:'start'});
+    });
+  });
   el('one').addEventListener('click', flipOne);
   el('thousand').addEventListener('click', () => batch(1000));
   el('hundredThousand').addEventListener('click', () => batch(100000));
