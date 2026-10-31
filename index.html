@@ -1343,9 +1343,9 @@
   }
   function runNextEvidenceStage() {
     if (state.busy || !journey.tenComplete) return;
-    if (!journey.hundredComplete) batch(100);
-    else if (!journey.thousandComplete) batch(1000);
-    else if (!journey.largeComplete) goToStory();
+    if (!journey.hundredComplete) return batch(100);
+    if (!journey.thousandComplete) return batch(1000);
+    if (!journey.largeComplete) goToStory();
   }
   async function runTen() {
     if (state.busy || !pollState.predicted || !journey.reflected) return;
