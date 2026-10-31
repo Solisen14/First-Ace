@@ -1221,7 +1221,16 @@
   el('one').addEventListener('click', flipOne);
   el('hundred').addEventListener('click', () => batch(100));
   el('thousand').addEventListener('click', () => batch(1000));
-  el('hundredThousand').addEventListener('click', () => batch(100000));
+  el('hundredThousand').addEventListener('click', async () => {
+    if (state.busy || !pollState.predicted || !journey.thousandComplete) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el('results-section').scrollIntoView({
+      behavior: reduced ? 'auto' : 'smooth',
+      block: 'start'
+    });
+    if (!reduced) await new Promise(resolve => setTimeout(resolve, 340));
+    await batch(100000);
+  });
   document.querySelectorAll('[data-story-answer]').forEach(button =>
     button.addEventListener('click', () => respondToStory(button)));
   el('theory-next').addEventListener('click', () => {
