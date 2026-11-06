@@ -66,6 +66,11 @@
     .button:disabled { opacity:.57; cursor:wait; transform:none; }
     .reset { border:0; background:none; color:var(--muted); font-size:15px; text-decoration:underline; text-underline-offset:3px; cursor:pointer; padding:9px; }
     .stage { margin-top:25px; background:#f7f9f8; border:1px solid #e3eae8; border-radius:13px; padding:20px; }
+    .deck-next { margin-top:17px; display:flex; align-items:center; flex-wrap:wrap; gap:14px; }
+    .deck-next .button {font-size:16px; padding:12px 18px;}
+    .deck-next p {margin:0; font-size:15px; color:#36584f;}
+    /* Keep the visible outcome stable while the user decides when to continue. */
+    .stage {overflow-anchor:none;}
     .stage-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:16px; }
     .stage-head strong { font-size:15px; }
     .stage-head span { color:var(--muted); font-size:14px; }
@@ -409,6 +414,10 @@
           <div class="readout-item final" id="outcome-container"><span>Result of this shuffle</span><strong id="outcome">Ready when you are</strong></div>
         </div>
         <div class="note" id="stage-note">The gold outline marks the first ace. Teal marks the very next card.</div>
+        <div id="deck-next" class="deck-next" hidden>
+          <button id="deck-next-button" class="button" type="button">Continue ↓</button>
+          <p id="deck-next-hint">Your result is ready. Continue when you've examined it.</p>
+        </div>
       </div>
       <div id="reflection" class="reflection" hidden aria-labelledby="reflection-title">
         <p class="reflection-kicker">Think about this shuffle</p>
@@ -430,6 +439,7 @@
       <div class="next-step-heading"><span class="eyebrow">Next step</span><strong id="results-next-heading">More shuffles, more evidence</strong></div>
       <button id="hundred" class="button" type="button">Run 100 Shuffles</button>
       <button id="thousand" class="button" type="button" hidden>Run 1,000 Shuffles</button>
+      <button id="top-story-next" class="button" type="button" hidden>Explore the data analysis ↓</button>
     </div>
     <div id="bulk-progress" class="bulk-progress" hidden>
       <label for="bulk-progress-bar"><span id="bulk-title">Running shuffles</span><strong id="bulk-count">0 / 100</strong></label>
@@ -877,7 +887,7 @@
   let storySnapshot = null;
   let storyActiveStep = -1;
   let reflectionAnswer = null;
-  const controls = [el('one'), el('ten'), el('hundred'), el('thousand'), el('hundredThousand'), el('bottom-next-button'), el('reset')];
+  const controls = [el('one'), el('ten'), el('hundred'), el('thousand'), el('hundredThousand'), el('bottom-next-button'), el('top-story-next'), el('reset')];
 
   function shuffleDeck() {
     const a = MASTER.slice();
@@ -1253,14 +1263,16 @@
     reflectionAnswer = reflectionFor(e);
     el('reflection-title').textContent = reflectionAnswer.question;
     el('reflection').hidden = false;
-    el('reflection-title').focus({preventScroll:true});
+    // Preserve the final deck and readout on screen. Students choose when
+    // to move down to the reflection instead of being moved automatically.
+    el('deck-next').hidden = false;
+    el('deck-next-button').textContent = 'Reflect on this shuffle ↓';
+    el('deck-next-hint').textContent = 'Look at the first ace and the next card. Continue when ready.';
     el('reflection-feedback').hidden = true;
     el('reflection-feedback').replaceChildren();
     el('reflection-follow').hidden = true;
     el('reflection-run').hidden = true;
     document.querySelectorAll('[data-reflect]').forEach(b => b.disabled = false);
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    el('reflection').scrollIntoView({behavior: reduced ? 'auto' : 'smooth', block:'nearest'});
   }
   function answerReflection(answer) {
     if (!reflectionAnswer || !['yes','no'].includes(answer) || el('reflection-feedback').hidden === false) return;
@@ -1314,31 +1326,42 @@
     const next = el('results-bottom-next');
     const top = el('results-controls');
     const bottom = el('bottom-next-button');
-    if (!journey.tenComplete || journey.largeComplete) {
+    const storyButton = el('top-story-next');
+    if (!journey.tenComplete) {
       next.hidden = true;
       top.hidden = true;
       return;
     }
+    // Keep both panels in the document as milestones unlock. Removing a
+    // panel above the data causes the browser to adjust its scroll position.
     next.hidden = false;
+    top.hidden = false;
     if (!journey.hundredComplete) {
-      top.hidden = false;
       el('hundred').hidden = false;
       el('thousand').hidden = true;
+      storyButton.hidden = true;
       el('results-next-heading').textContent = 'What happens with 100 more decks?';
       el('bottom-next-heading').textContent = 'Ready for a larger sample?';
       el('bottom-next-description').textContent = 'Try 100 additional shuffles. The bars and statistics update as the results arrive.';
       bottom.textContent = 'Run 100 Shuffles';
     } else if (!journey.thousandComplete) {
-      top.hidden = false;
       el('hundred').hidden = true;
       el('thousand').hidden = false;
+      storyButton.hidden = true;
       el('results-next-heading').textContent = 'Now try 1,000 more decks';
       el('bottom-next-heading').textContent = 'What changes with 1,000 more shuffles?';
       el('bottom-next-description').textContent = 'Watch the running percentages change with a larger sample.';
       bottom.textContent = 'Run 1,000 Shuffles';
     } else {
-      top.hidden = true;
-      el('bottom-next-heading').textContent = 'Your data has a story';
+      el('hundred').hidden = true;
+      el('thousand').hidden = true;
+      storyButton.hidden = false;
+      el('results-next-heading').textContent = journey.largeComplete
+        ? 'The experiment is complete. Revisit the analysis below.'
+        : 'Scroll down to explore your data analysis';
+      el('bottom-next-heading').textContent = journey.largeComplete
+        ? 'Review what your experiment revealed'
+        : 'Your data has a story';
       el('bottom-next-description').textContent = 'Scroll through the analysis and respond to questions based on your results.';
       bottom.textContent = 'Explore the data analysis ↓';
     }
@@ -1347,12 +1370,23 @@
     if (state.busy || !journey.tenComplete) return;
     if (!journey.hundredComplete) return batch(100);
     if (!journey.thousandComplete) return batch(1000);
-    if (!journey.largeComplete) goToStory();
+    goToStory();
+  }
+  function continueFromDeck() {
+    if (state.busy || !pollState.predicted) return;
+    const reflectionVisible = !el('reflection').hidden;
+    const target = reflectionVisible ? el('reflection') : journey.tenComplete ? el('results-section') : null;
+    if (!target) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const focus = reflectionVisible ? el('reflection-title') : el('results-title');
+    target.scrollIntoView({behavior: reduced ? 'auto' : 'smooth', block:'start'});
+    focus.focus({preventScroll:true});
   }
   async function runTen() {
     if (state.busy || !pollState.predicted || !journey.reflected) return;
     busy(true);
     el('reflection').hidden = true;
+    el('deck-next').hidden = true;
     el('ten-progress').hidden = false;
     updateTenProgress(0);
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1374,21 +1408,23 @@
       journey.tenComplete = true;
       el('results-section').hidden = false;
       el('ten').hidden = false;
+      el('deck-next').hidden = false;
+      el('deck-next-button').textContent = 'View the results ↓';
+      el('deck-next-hint').textContent = 'Your tenth shuffle is complete. Examine the final cards before moving on.';
       updateEvidenceActions();
       // The next stage is a non-animated batch of 100, offered in the results section.
       el('experiment-hint').textContent = 'You have watched ten more shuffles. Compare the running totals below, or run more trials.';
     } finally {
       busy(false);
     }
-    el('results-title').focus({preventScroll:true});
-    el('results-section').scrollIntoView({
-      behavior: reduced ? 'auto' : 'smooth', block: 'start'
-    });
+    // Do not move the viewport on completion. The final shuffled deck
+    // stays visible until the student selects View the results.
   }
   async function flipOne() {
     if (state.busy || !pollState.predicted) return;
     busy(true);
     el('reflection').hidden = true;
+    el('deck-next').hidden = true;
     el('ten-progress').hidden = true;
     const e = evaluate(shuffleDeck());
     await animateDeck(e, 65);
@@ -1444,7 +1480,8 @@
       } else if (count === 1000 && !journey.thousandComplete) {
         journey.thousandComplete = true;
         buildStory();
-        el('scroll-invite').hidden = false;
+        // The existing top/bottom action panels now invite students to
+        // scroll down, without inserting a new block above the graphs.
         // Move the next step to the bottom of the story, not above the data.
         el('hundredThousand').hidden = false;
         el('hundred').hidden = true;
@@ -1489,6 +1526,7 @@
     reflectionAnswer = null;
     el('reflection').hidden = true;
     el('reflection-run').hidden = true;
+    el('deck-next').hidden = true;
     el('ten-progress').hidden = true;
     updateTenProgress(0);
     el('bulk-progress').hidden = true;
@@ -1523,6 +1561,8 @@
   el('hundred').addEventListener('click', () => batch(100));
   el('thousand').addEventListener('click', () => batch(1000));
   el('bottom-next-button').addEventListener('click', runNextEvidenceStage);
+  el('top-story-next').addEventListener('click', goToStory);
+  el('deck-next-button').addEventListener('click', continueFromDeck);
   el('hundredThousand').addEventListener('click', async () => {
     if (state.busy || !pollState.predicted || !journey.thousandComplete) return;
     prepareLiveResults();
